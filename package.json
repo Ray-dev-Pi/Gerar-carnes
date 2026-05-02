@@ -4,13 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node --check api/index.js",
+    "build": "node --check api/index.js && node --check api/converter/boleto.js",
     "start": "node backend/src/server.js",
     "inter:status": "node backend/src/scripts/checkInter.js",
     "inter:cert": "node backend/src/scripts/prepareInterCert.js"
   },
   "dependencies": {
+    "busboy": "^1.6.0",
     "bwip-js": "^4.10.1",
+    "busboy": "^1.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

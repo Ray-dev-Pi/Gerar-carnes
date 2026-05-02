@@ -43,7 +43,10 @@ converterForm.addEventListener('submit', async (event) => {
 
     if (!response.ok) {
       const error = await readJsonResponse(response);
-      throw new Error(error.message || 'Não foi possível converter o boleto.');
+      throw new Error(
+        error.message ||
+          'Nao foi possivel converter o boleto. Tente novamente ou envie um PDF com texto selecionavel.'
+      );
     }
 
     const blob = await response.blob();

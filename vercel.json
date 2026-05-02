@@ -3,6 +3,10 @@
   "outputDirectory": "frontend",
   "rewrites": [
     {
+      "source": "/api/converter/boleto",
+      "destination": "/api/converter/boleto.js"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index.js"
     }
