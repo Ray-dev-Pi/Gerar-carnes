@@ -1,4 +1,5 @@
 import { env } from '../config/env.js';
+import { getInterConfigStatus } from '../services/inter/interConfigStatus.js';
 
 function maskMongoUri(uri) {
   if (!uri) return '';
@@ -9,19 +10,12 @@ function maskMongoUri(uri) {
 }
 
 export function getConfigStatusHandler(req, res) {
-  const usesInterApi = ['real', 'sandbox'].includes(env.inter.mode);
+  const interConfig = getInterConfigStatus();
 
   res.json({
     interMode: env.inter.mode,
-    realInterReady: Boolean(
-      usesInterApi &&
-        env.inter.clientId &&
-        env.inter.clientSecret &&
-        ((env.inter.certBase64 && env.inter.keyBase64) ||
-          (env.inter.certPath && env.inter.keyPath) ||
-          env.inter.pfxBase64 ||
-          env.inter.pfxPath)
-    ),
+    realInterReady: interConfig.realInterReady,
+    missingInterConfig: interConfig.missing,
     hasMongoUri: Boolean(env.mongodbUri),
     mongoLooksLocal: env.mongodbUri.includes('127.0.0.1') || env.mongodbUri.includes('localhost'),
     mongodbUriSource: env.mongodbUriSource,

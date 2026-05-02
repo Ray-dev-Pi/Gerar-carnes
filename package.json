@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "node --check api/index.js",
-    "start": "node backend/src/server.js"
+    "start": "node backend/src/server.js",
+    "inter:status": "node backend/src/scripts/checkInter.js"
   },
   "dependencies": {
     "bwip-js": "^4.10.1",

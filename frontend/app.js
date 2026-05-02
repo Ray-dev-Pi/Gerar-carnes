@@ -121,7 +121,7 @@ async function loadConfigStatus() {
       ? 'Modo simulacao ativo: nao registra boletos reais no Banco Inter.'
       : status.realInterReady
         ? `Banco Inter ${status.interMode} ativo: ${status.bankName}.`
-        : 'Banco Inter selecionado, mas credenciais/certificado nao estao completos.';
+        : `Banco Inter selecionado, mas faltam: ${(status.missingInterConfig || []).join(', ')}.`;
     configStatus.classList.toggle('warning', isMock || !status.realInterReady);
   } catch (error) {
     configStatus.textContent = error.message;
