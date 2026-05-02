@@ -1,8 +1,8 @@
 # Sistema de Geracao de Carnes - Banco Inter
 
-Sistema web completo para gerar carnes com boletos parcelados usando Node.js, Express, MongoDB e frontend HTML/CSS/JS.
+Sistema web completo para gerar carnes com boletos parcelados reais usando Node.js, Express, MongoDB, frontend HTML/CSS/JS e API do Banco Inter Empresas.
 
-Por padrao, o projeto roda em modo simulado (`INTER_MODE=mock`), sem precisar de credenciais bancarias. Para producao, configure `INTER_MODE=real` e informe as credenciais/certificados da API do Banco Inter Empresas.
+Para gerar boletos/Pix, configure `INTER_MODE=real`, `REQUIRE_INTER_REAL=true` e informe as credenciais/certificados da API do Banco Inter Empresas.
 
 ## Estrutura
 
@@ -54,17 +54,11 @@ cp .env.example .env
 
 3. Ajuste o `.env`.
 
-Para testar sem Inter:
-
-```env
-INTER_MODE=mock
-MONGODB_URI=mongodb://127.0.0.1:27017/gerar-carnes
-```
-
 Para usar Inter real:
 
 ```env
 INTER_MODE=real
+REQUIRE_INTER_REAL=true
 INTER_CLIENT_ID=seu_client_id
 INTER_CLIENT_SECRET=seu_client_secret
 INTER_CERT_PATH=C:/caminho/certificado.crt
@@ -104,7 +98,8 @@ Variaveis obrigatorias em Production/Preview:
 ```env
 MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/gerar-carnes
 MONGODB_DB_NAME=gerar-carnes
-INTER_MODE=mock
+INTER_MODE=real
+REQUIRE_INTER_REAL=true
 APP_URL=https://seu-projeto.vercel.app
 APP_USERNAME=admin
 APP_PASSWORD=uma-senha-forte
@@ -118,6 +113,7 @@ Para usar Banco Inter real na Vercel:
 
 ```env
 INTER_MODE=real
+REQUIRE_INTER_REAL=true
 INTER_CLIENT_ID=seu_client_id
 INTER_CLIENT_SECRET=seu_client_secret
 INTER_SCOPE=boleto-cobranca.write boleto-cobranca.read

@@ -7,7 +7,7 @@ const mongodbUri =
   process.env.MONGO_URI ||
   process.env.DATABASE_URL ||
   'mongodb://127.0.0.1:27017/gerar-carnes';
-const interMode = process.env.INTER_MODE || 'mock';
+const interMode = process.env.INTER_MODE || 'real';
 
 export const env = {
   port: Number(process.env.PORT || 3000),

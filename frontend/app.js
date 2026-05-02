@@ -123,7 +123,7 @@ async function loadConfigStatus() {
     }
 
     configStatus.textContent = isMock
-      ? 'Modo simulacao ativo: nao registra boletos reais no Banco Inter.'
+      ? 'Banco Inter real nao configurado. Defina INTER_MODE=real e as credenciais da API.'
       : status.realInterReady
         ? `Banco Inter ${status.interMode} ativo: ${status.bankName}.`
         : `Banco Inter selecionado, mas faltam: ${(status.missingInterConfig || []).join(', ')}.`;
@@ -353,7 +353,7 @@ function renderBoletos(result) {
           : ''
       }
       <div class="actions">
-        ${boleto.bankPdfUrl ? `<a href="${withToken(boleto.bankPdfUrl)}" target="_blank" rel="noreferrer">${boleto.codigoSolicitacao?.startsWith('MOCK-') ? 'PDF simulado' : 'PDF oficial Inter'}</a>` : ''}
+        ${boleto.bankPdfUrl ? `<a href="${withToken(boleto.bankPdfUrl)}" target="_blank" rel="noreferrer">PDF oficial Inter</a>` : ''}
       </div>
     `;
     boletosEl.appendChild(item);
