@@ -9,14 +9,27 @@ export class InterRealClient {
       throw new Error('Credenciais INTER_CLIENT_ID e INTER_CLIENT_SECRET nao configuradas');
     }
 
-    if (!env.inter.certPath || !env.inter.keyPath) {
-      throw new Error('Certificado INTER_CERT_PATH e chave INTER_KEY_PATH nao configurados');
+    const cert = env.inter.certBase64
+      ? Buffer.from(env.inter.certBase64, 'base64')
+      : env.inter.certPath
+        ? fs.readFileSync(env.inter.certPath)
+        : null;
+    const key = env.inter.keyBase64
+      ? Buffer.from(env.inter.keyBase64, 'base64')
+      : env.inter.keyPath
+        ? fs.readFileSync(env.inter.keyPath)
+        : null;
+
+    if (!cert || !key) {
+      throw new Error(
+        'Configure INTER_CERT_PATH/INTER_KEY_PATH ou INTER_CERT_BASE64/INTER_KEY_BASE64'
+      );
     }
 
     this.baseUrl = env.inter.baseUrl;
     this.agentOptions = {
-      cert: fs.readFileSync(env.inter.certPath),
-      key: fs.readFileSync(env.inter.keyPath)
+      cert,
+      key
     };
     this.cachedToken = null;
   }

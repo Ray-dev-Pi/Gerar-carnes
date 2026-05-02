@@ -87,6 +87,38 @@ frontend/index.html
 
 Ou sirva a pasta `frontend` com qualquer servidor estatico. A API padrao usada pelo frontend e `http://localhost:3000/api`.
 
+## Deploy na Vercel
+
+Este projeto ja possui `vercel.json`, `api/index.js` e `package.json` na raiz para funcionar na Vercel.
+
+Na Vercel, configure:
+
+- Framework Preset: `Other`
+- Root Directory: raiz do repositorio
+- Build Command: `npm run build`
+- Output Directory: deixe vazio
+
+Variaveis obrigatorias em Production/Preview:
+
+```env
+MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/gerar-carnes
+INTER_MODE=mock
+APP_URL=https://seu-projeto.vercel.app
+```
+
+Para usar Banco Inter real na Vercel:
+
+```env
+INTER_MODE=real
+INTER_CLIENT_ID=seu_client_id
+INTER_CLIENT_SECRET=seu_client_secret
+INTER_SCOPE=boleto-cobranca.write boleto-cobranca.read
+INTER_CERT_BASE64=conteudo_base64_do_certificado
+INTER_KEY_BASE64=conteudo_base64_da_chave
+```
+
+Use MongoDB Atlas ou outro Mongo acessivel pela internet. `mongodb://127.0.0.1:27017` nao funciona na Vercel, porque la o servidor nao enxerga o seu computador.
+
 ## Exemplo de Requisicao
 
 ```bash

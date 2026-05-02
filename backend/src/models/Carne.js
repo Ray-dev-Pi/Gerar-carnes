@@ -33,6 +33,7 @@ const carneSchema = new mongoose.Schema(
     },
     boletos: [boletoSchema],
     pdfPath: { type: String },
+    pdfBase64: { type: String },
     errorMessage: { type: String }
   },
   { timestamps: true }

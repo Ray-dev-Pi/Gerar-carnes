@@ -7,16 +7,11 @@ import { formatCurrencyBRL } from '../utils/money.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const storageDir = path.resolve(__dirname, '../../storage/carnes');
+const storageDir = process.env.VERCEL
+  ? '/tmp/gerar-carnes'
+  : path.resolve(__dirname, '../../storage/carnes');
 
-export async function generateCarnePdf(carne) {
-  await fs.promises.mkdir(storageDir, { recursive: true });
-  const pdfPath = path.join(storageDir, `${carne.carneId}.pdf`);
-
-  const doc = new PDFDocument({ margin: 40, size: 'A4' });
-  const stream = fs.createWriteStream(pdfPath);
-  doc.pipe(stream);
-
+async function renderCarnePdf(doc, carne) {
   doc.fontSize(18).text(`Carne ${carne.carneId}`, { align: 'center' });
   doc.moveDown(0.5);
   doc.fontSize(10).text(`Cliente: ${carne.customerName}`);
@@ -51,6 +46,33 @@ export async function generateCarnePdf(carne) {
 
     doc.moveDown(7);
   }
+}
+
+export async function generateCarnePdfBuffer(carne) {
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  const chunks = [];
+
+  doc.on('data', (chunk) => chunks.push(chunk));
+  const finished = new Promise((resolve, reject) => {
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+  });
+
+  await renderCarnePdf(doc, carne);
+  doc.end();
+
+  return finished;
+}
+
+export async function generateCarnePdf(carne) {
+  await fs.promises.mkdir(storageDir, { recursive: true });
+  const pdfPath = path.join(storageDir, `${carne.carneId}.pdf`);
+
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  const stream = fs.createWriteStream(pdfPath);
+  doc.pipe(stream);
+
+  await renderCarnePdf(doc, carne);
 
   doc.end();
 
@@ -59,5 +81,10 @@ export async function generateCarnePdf(carne) {
     stream.on('error', reject);
   });
 
-  return pdfPath;
+  const buffer = await fs.promises.readFile(pdfPath);
+
+  return {
+    path: pdfPath,
+    base64: buffer.toString('base64')
+  };
 }

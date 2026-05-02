@@ -43,7 +43,9 @@ export async function createCarne(payload) {
 
     carne.boletos = boletos;
     carne.status = 'generated';
-    carne.pdfPath = await generateCarnePdf(carne);
+    const pdf = await generateCarnePdf(carne);
+    carne.pdfPath = pdf.path;
+    carne.pdfBase64 = pdf.base64;
     await carne.save();
 
     return formatCarneResponse(carne, false);
@@ -69,7 +71,8 @@ export function formatCarneResponse(carne, reused = false) {
     totalAmount: carne.totalAmount,
     installments: carne.installments,
     firstDueDate: carne.firstDueDate,
-    pdfUrl: carne.pdfPath ? `${env.appUrl}/api/carnes/${carne.carneId}/pdf` : null,
+    pdfUrl:
+      carne.pdfPath || carne.pdfBase64 ? `${env.appUrl}/api/carnes/${carne.carneId}/pdf` : null,
     boletos: carne.boletos.map((boleto) => ({
       installmentNumber: boleto.installmentNumber,
       dueDate: boleto.dueDate,

@@ -25,7 +25,17 @@ export async function getCarneHandler(req, res, next) {
 export async function downloadCarnePdfHandler(req, res, next) {
   try {
     const carne = await getCarneById(req.params.carneId);
-    if (!carne || !carne.pdfPath || !fs.existsSync(carne.pdfPath)) {
+    if (!carne) {
+      return res.status(404).json({ message: 'Carne nao encontrado' });
+    }
+
+    if (carne.pdfBase64) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${carne.carneId}.pdf"`);
+      return res.send(Buffer.from(carne.pdfBase64, 'base64'));
+    }
+
+    if (!carne.pdfPath || !fs.existsSync(carne.pdfPath)) {
       return res.status(404).json({ message: 'PDF do carne nao encontrado' });
     }
 

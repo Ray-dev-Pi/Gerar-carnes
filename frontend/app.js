@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL =
+  window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
 
 const form = document.querySelector('#carneForm');
 const submitButton = document.querySelector('#submitButton');
