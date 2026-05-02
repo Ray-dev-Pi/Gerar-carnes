@@ -5,6 +5,7 @@ const API_BASE_URL =
     : '/api';
 
 const form = document.querySelector('#carneForm');
+const appShell = document.querySelector('#appShell');
 const loginView = document.querySelector('#loginView');
 const loginForm = document.querySelector('#loginForm');
 const loginButton = document.querySelector('#loginButton');
@@ -47,6 +48,8 @@ function clearToken() {
 function setLoggedIn(isLoggedIn) {
   loginView.classList.toggle('hidden', isLoggedIn);
   document.body.classList.toggle('locked', !isLoggedIn);
+  appShell.inert = !isLoggedIn;
+  appShell.setAttribute('aria-hidden', String(!isLoggedIn));
 }
 
 function friendlyNetworkError(error) {
@@ -234,7 +237,7 @@ function renderCustomers() {
     card.className = `customer-card${customer.id === customerId.value ? ' active' : ''}`;
     card.innerHTML = `
       <p class="customer-name">${escapeHtml(customer.name)}</p>
-      <p class="customer-meta">${escapeHtml(customer.document)} · ${escapeHtml(customer.city)}/${escapeHtml(customer.state)}</p>
+      <p class="customer-meta">${escapeHtml(customer.document)} - ${escapeHtml(customer.city)}/${escapeHtml(customer.state)}</p>
       <p class="customer-meta">${escapeHtml(customer.email || customer.phone || 'Sem contato informado')}</p>
       <div class="customer-actions">
         <button type="button" data-action="select" data-id="${customer.id}">Usar</button>
@@ -278,9 +281,9 @@ function renderCarnes() {
     card.className = 'carne-card';
     card.innerHTML = `
       <p class="customer-name">${escapeHtml(carne.carneId)}</p>
-      <p class="customer-meta">${escapeHtml(carne.customerName)} · ${formatCurrency(carne.totalAmount)} · ${carne.installments} parcela(s)</p>
+      <p class="customer-meta">${escapeHtml(carne.customerName)} - ${formatCurrency(carne.totalAmount)} - ${carne.installments} parcela(s)</p>
       <p class="customer-meta">Status: ${escapeHtml(carne.status)}</p>
-      ${carne.pdfUrl ? `<a href="${withToken(carne.pdfUrl)}" target="_blank" rel="noreferrer">Abrir carnê</a>` : ''}
+      ${carne.pdfUrl ? `<a href="${withToken(carne.pdfUrl)}" target="_blank" rel="noreferrer">Abrir carne</a>` : ''}
     `;
     carnesList.appendChild(card);
   }
@@ -312,7 +315,7 @@ function renderBoletos(result) {
 
   if (result.pdfUrl) {
     pdfLink.href = withToken(result.pdfUrl);
-    pdfLink.textContent = 'Baixar carnê';
+    pdfLink.textContent = 'Baixar carne';
     pdfLink.classList.remove('hidden');
   }
 
