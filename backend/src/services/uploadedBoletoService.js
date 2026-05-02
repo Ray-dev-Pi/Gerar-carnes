@@ -1,6 +1,7 @@
 import { generateCarnePdfBuffer } from './pdfService.js';
 import { createCarneId } from '../utils/ids.js';
 import { env } from '../config/env.js';
+import jsQR from 'jsqr';
 
 let PDFParseClass;
 let pdfJsWorkerReady;
@@ -27,9 +28,10 @@ export async function convertUploadedBoletoToCarne({ fileBuffer, fields }) {
   const bankCode = (codigoBarras || linhaDigitavel || '').slice(0, 3);
   const carneId = createCarneId();
   const beneficiaryName = fields.beneficiaryName || findBeneficiary(text) || 'Beneficiario';
+  const manualPixCopiaECola = fields.pixCopiaECola || fields.pixCopiaEColaManual || '';
   const pixCopiaECola =
-    fields.pixCopiaECola ||
-    fields.pixCopiaEColaManual ||
+    normalizePixPayload(manualPixCopiaECola) ||
+    (await findPixCopiaEColaFromQrCode(fileBuffer)) ||
     findPixCopiaECola(text) ||
     createPixCopiaECola({
       pixKey: fields.pixKey || env.boleto.pixKey,
@@ -238,8 +240,62 @@ function findDocumentNumber(text) {
 }
 
 function findPixCopiaECola(text) {
-  const match = text.match(/000201[0-9A-Z./:+-]{40,}/i);
-  return match?.[0]?.trim() || '';
+  const normalizedText = String(text || '').replace(/\s+/g, '');
+  const candidates = normalizedText.match(/000201[0-9A-Z.$%*+\-/:]{40,}?6304[0-9A-F]{4}/gi) || [];
+  return candidates.map(normalizePixPayload).find(Boolean) || '';
+}
+
+async function findPixCopiaEColaFromQrCode(fileBuffer) {
+  const PDFParse = await loadPdfParser();
+  const parser = new PDFParse({ data: fileBuffer });
+
+  try {
+    const screenshot = await parser.getScreenshot({
+      first: 1,
+      desiredWidth: 1600,
+      imageDataUrl: false,
+      imageBuffer: true
+    });
+    const pageImage = screenshot.pages?.[0]?.data;
+    if (!pageImage) return '';
+
+    return decodePixQrCode(pageImage);
+  } catch (error) {
+    console.warn('Nao foi possivel ler QR Code Pix do PDF:', error.message);
+    return '';
+  } finally {
+    await parser.destroy();
+  }
+}
+
+async function decodePixQrCode(imageBuffer) {
+  const { createCanvas, loadImage } = await import('@napi-rs/canvas');
+  const image = await loadImage(imageBuffer);
+  const canvas = createCanvas(image.width, image.height);
+  const context = canvas.getContext('2d');
+
+  context.drawImage(image, 0, 0);
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const qr = jsQR(imageData.data, imageData.width, imageData.height, {
+    inversionAttempts: 'attemptBoth'
+  });
+  const payload = qr?.data?.trim() || '';
+
+  return normalizePixPayload(payload);
+}
+
+function normalizePixPayload(value) {
+  const payload = String(value || '').replace(/\s+/g, '').trim();
+  if (!payload.startsWith('000201')) return '';
+
+  const crcIndex = payload.lastIndexOf('6304');
+  if (crcIndex < 0 || crcIndex + 8 > payload.length) return '';
+
+  const pixPayload = payload.slice(0, crcIndex + 8);
+  const expectedCrc = pixPayload.slice(-4).toUpperCase();
+  const actualCrc = crc16Ccitt(pixPayload.slice(0, -4));
+
+  return expectedCrc === actualCrc ? pixPayload : '';
 }
 
 function createPixCopiaECola({ pixKey, amount, beneficiaryName, city, txid }) {

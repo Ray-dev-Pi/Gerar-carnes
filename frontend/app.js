@@ -32,7 +32,7 @@ converterForm.addEventListener('submit', async (event) => {
   convertButton.disabled = true;
   convertButton.textContent = 'Convertendo...';
   pdfLink.classList.add('hidden');
-  setMessage('Lendo os dados do boleto Inter e montando o carnê. Se o PDF nao tiver Pix, use a chave Pix do formulario para gerar o QR Code.');
+  setMessage('Lendo os dados do boleto Inter, procurando QR Code Pix e montando o carnê...');
 
   try {
     const data = new FormData(converterForm);

@@ -23,23 +23,6 @@
             <input id="boletoFile" name="boleto" type="file" accept="application/pdf" required />
           </label>
 
-          <section class="pix-panel" aria-label="Dados Pix">
-            <label>
-              Chave Pix
-              <input name="pixKey" type="text" placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatoria" />
-            </label>
-
-            <label>
-              Cidade do recebedor
-              <input name="pixCity" type="text" placeholder="Ex: Fortaleza" />
-            </label>
-
-            <label class="wide">
-              Pix copia e cola pronto
-              <textarea name="pixCopiaECola" rows="3" placeholder="Se o boleto ja tiver Pix copia e cola, cole aqui. Se nao tiver, informe a chave Pix acima."></textarea>
-            </label>
-          </section>
-
           <details>
             <summary>Correção manual, só se o PDF estiver ilegível</summary>
             <div class="details-grid">
@@ -65,7 +48,7 @@
 
               <label class="wide">
                 Pix copia e cola
-                <textarea name="pixCopiaEColaManual" rows="4" placeholder="Cole aqui apenas se quiser gerar QR Code Pix e ele não tiver sido lido do PDF."></textarea>
+                <textarea name="pixCopiaEColaManual" rows="4" placeholder="Opcional. Use apenas se o QR Code Pix nao estiver no PDF ou nao puder ser lido."></textarea>
               </label>
 
               <label>
