@@ -119,6 +119,12 @@ h2 {
   gap: 14px;
 }
 
+.converter-panel {
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid #dfe5eb;
+}
+
 label {
   display: grid;
   gap: 7px;

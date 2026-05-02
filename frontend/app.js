@@ -5,6 +5,7 @@ const API_BASE_URL =
     : '/api';
 
 const form = document.querySelector('#carneForm');
+const uploadBoletoForm = document.querySelector('#uploadBoletoForm');
 const appShell = document.querySelector('#appShell');
 const loginView = document.querySelector('#loginView');
 const loginForm = document.querySelector('#loginForm');
@@ -12,6 +13,7 @@ const loginButton = document.querySelector('#loginButton');
 const loginMessage = document.querySelector('#loginMessage');
 const logoutButton = document.querySelector('#logoutButton');
 const submitButton = document.querySelector('#submitButton');
+const uploadBoletoButton = document.querySelector('#uploadBoletoButton');
 const saveCustomerButton = document.querySelector('#saveCustomerButton');
 const clearCustomerButton = document.querySelector('#clearCustomerButton');
 const refreshCustomersButton = document.querySelector('#refreshCustomersButton');
@@ -565,6 +567,47 @@ form.addEventListener('submit', async (event) => {
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = 'Gerar Carne';
+  }
+});
+
+uploadBoletoForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  uploadBoletoButton.disabled = true;
+  uploadBoletoButton.textContent = 'Convertendo...';
+  setMessage('Convertendo boleto enviado para formato de carne...');
+
+  try {
+    const data = new FormData(uploadBoletoForm);
+    const customerPayload = getPayload();
+
+    data.append('customerName', customerPayload.customerName || '');
+    data.append('document', customerPayload.document || '');
+    data.append('beneficiaryName', '');
+
+    const response = await fetch(`${API_BASE_URL}/carnes/upload-boleto`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getToken()}` },
+      body: data
+    });
+
+    if (!response.ok) {
+      const error = await readJsonResponse(response);
+      throw new Error(error.message || 'Nao foi possivel converter o boleto');
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    pdfLink.href = url;
+    pdfLink.textContent = 'Abrir carne convertido';
+    pdfLink.classList.remove('hidden');
+    resultTitle.textContent = 'Boleto convertido';
+    setMessage('Boleto convertido para formato de carne.');
+    window.open(url, '_blank', 'noreferrer');
+  } catch (error) {
+    setMessage(friendlyNetworkError(error), 'error');
+  } finally {
+    uploadBoletoButton.disabled = false;
+    uploadBoletoButton.textContent = 'Converter boleto';
   }
 });
 

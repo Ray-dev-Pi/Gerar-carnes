@@ -136,6 +136,43 @@
             <button id="submitButton" type="submit">Gerar Carne</button>
           </div>
         </form>
+
+        <div class="converter-panel">
+          <p class="eyebrow">Converter boleto</p>
+          <h2>Boleto para carnê</h2>
+          <form id="uploadBoletoForm" class="form">
+            <label>
+              PDF do boleto
+              <input id="boletoFile" name="boleto" type="file" accept="application/pdf" required />
+            </label>
+
+            <div class="grid">
+              <label>
+                Linha digitável
+                <input id="uploadedLinhaDigitavel" name="linhaDigitavel" type="text" placeholder="Opcional se existir no PDF" />
+              </label>
+
+              <label>
+                Valor
+                <input id="uploadedAmount" name="amount" type="text" placeholder="Ex: 150,00" />
+              </label>
+            </div>
+
+            <div class="grid">
+              <label>
+                Vencimento
+                <input id="uploadedDueDate" name="dueDate" type="date" />
+              </label>
+
+              <label>
+                Banco
+                <input id="uploadedBankName" name="bankName" type="text" placeholder="Ex: Banco Inter" />
+              </label>
+            </div>
+
+            <button id="uploadBoletoButton" class="secondary-button" type="submit">Converter boleto</button>
+          </form>
+        </div>
       </section>
 
       <section class="panel customers-panel">
