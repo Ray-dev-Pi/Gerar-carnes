@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import bwipjs from 'bwip-js';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { fileURLToPath } from 'url';
@@ -35,21 +36,28 @@ function field(doc, label, value, x, y, w, h, options = {}) {
     .text(value || '-', x + 3, y + 12, { width: w - 6, height: h - 13 });
 }
 
-function barcodePattern(value) {
-  const digits = String(value || '00000000000000000000000000000000000000000000').replace(/\D/g, '');
-  return digits.padEnd(44, '0').slice(0, 44);
-}
+async function drawBarcode(doc, value, x, y) {
+  const digits = String(value || '').replace(/\D/g, '');
 
-function drawBarcode(doc, value, x, y) {
-  const pattern = barcodePattern(value);
-  let cursor = x;
-
-  for (const digit of pattern) {
-    const width = Number(digit) % 3 === 0 ? 1.5 : 0.7;
-    const height = Number(digit) % 2 === 0 ? 42 : 36;
-    doc.rect(cursor, y, width, height).fill('#111111');
-    cursor += width + 1.4;
+  if (digits.length !== 44) {
+    doc
+      .fontSize(6.5)
+      .fillColor('#111111')
+      .text('Codigo de barras indisponivel', x, y + 16, { width: 260, align: 'center' });
+    return;
   }
+
+  const png = await bwipjs.toBuffer({
+    bcid: 'interleaved2of5',
+    text: digits,
+    scale: 2,
+    height: 12,
+    includetext: false,
+    paddingwidth: 0,
+    paddingheight: 0
+  });
+
+  doc.image(png, x, y, { width: 260, height: 42 });
 }
 
 async function renderBoletoPage(doc, carne, boleto) {
@@ -150,7 +158,7 @@ async function renderBoletoPage(doc, carne, boleto) {
     doc.fontSize(6.5).fillColor('#111111').text('QR Code PIX', mainX + mainW - 88, rowY + 419);
   }
 
-  drawBarcode(doc, boleto.codigoBarras, mainX + 10, rowY + 370);
+  await drawBarcode(doc, boleto.codigoBarras, mainX + 10, rowY + 370);
   doc
     .fontSize(6.5)
     .fillColor('#111111')
