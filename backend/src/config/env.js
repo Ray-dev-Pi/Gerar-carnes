@@ -47,6 +47,11 @@ export const env = {
     certPath: process.env.INTER_CERT_PATH || '',
     keyPath: process.env.INTER_KEY_PATH || '',
     certBase64: process.env.INTER_CERT_BASE64 || '',
-    keyBase64: process.env.INTER_KEY_BASE64 || ''
+    keyBase64: process.env.INTER_KEY_BASE64 || '',
+    pfxPath: process.env.INTER_PFX_PATH || '',
+    pfxBase64: process.env.INTER_PFX_BASE64 || '',
+    pfxPassphrase: process.env.INTER_PFX_PASSPHRASE || '',
+    multaPercentual: Number(process.env.INTER_MULTA_PERCENTUAL || 2),
+    moraPercentual: Number(process.env.INTER_MORA_PERCENTUAL || 1)
   }
 };

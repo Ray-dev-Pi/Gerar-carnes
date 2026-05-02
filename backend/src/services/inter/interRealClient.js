@@ -9,6 +9,11 @@ export class InterRealClient {
       throw new Error('Credenciais INTER_CLIENT_ID e INTER_CLIENT_SECRET nao configuradas');
     }
 
+    const pfx = env.inter.pfxBase64
+      ? Buffer.from(env.inter.pfxBase64, 'base64')
+      : env.inter.pfxPath
+        ? fs.readFileSync(env.inter.pfxPath)
+        : null;
     const cert = env.inter.certBase64
       ? Buffer.from(env.inter.certBase64, 'base64')
       : env.inter.certPath
@@ -20,17 +25,16 @@ export class InterRealClient {
         ? fs.readFileSync(env.inter.keyPath)
         : null;
 
-    if (!cert || !key) {
+    if (!pfx && (!cert || !key)) {
       throw new Error(
-        'Configure INTER_CERT_PATH/INTER_KEY_PATH ou INTER_CERT_BASE64/INTER_KEY_BASE64'
+        'Configure INTER_CERT_BASE64/INTER_KEY_BASE64 ou INTER_PFX_BASE64 para usar o Banco Inter real'
       );
     }
 
     this.baseUrl = env.inter.baseUrl;
-    this.agentOptions = {
-      cert,
-      key
-    };
+    this.agentOptions = pfx
+      ? { pfx, passphrase: env.inter.pfxPassphrase || undefined }
+      : { cert, key };
     this.cachedToken = null;
   }
 
@@ -105,6 +109,17 @@ export class InterRealClient {
     };
   }
 
+  async testConnection() {
+    const token = await this.getAccessToken();
+    return {
+      ok: true,
+      mode: 'real',
+      baseUrl: this.baseUrl,
+      tokenType: 'Bearer',
+      tokenPreview: `${token.slice(0, 8)}...`
+    };
+  }
+
   async getBoletoDetail(token, codigoSolicitacao) {
     return this.request(`/cobranca/v3/cobrancas/${codigoSolicitacao}`, {
       method: 'GET',
@@ -133,6 +148,14 @@ export class InterRealClient {
         tipoPessoa: personType,
         nome: payer.name
       },
+      multa: {
+        codigo: 'PERCENTUAL',
+        taxa: env.inter.multaPercentual
+      },
+      mora: {
+        codigo: 'TAXAMENSAL',
+        taxa: env.inter.moraPercentual
+      },
       mensagem: {
         linha1: `Parcela ${installment.installmentNumber}`,
         linha2: 'Carne gerado automaticamente'
@@ -143,10 +166,16 @@ export class InterRealClient {
   async request(path, options) {
     const { statusCode, body } = await this.rawRequest(path, options);
     const text = body.toString('utf8');
-    const data = text ? JSON.parse(text) : {};
+    const data = this.parseResponse(text);
 
     if (statusCode < 200 || statusCode >= 300) {
-      const message = data?.message || data?.title || text || 'Erro na API Banco Inter';
+      const message =
+        data?.message ||
+        data?.title ||
+        data?.detail ||
+        data?.violacoes?.map((item) => item.razao || item.propriedade).join(', ') ||
+        text ||
+        'Erro na API Banco Inter';
       throw new Error(`Banco Inter ${statusCode}: ${message}`);
     }
 
@@ -193,8 +222,21 @@ export class InterRealClient {
       });
 
       req.on('error', reject);
+      req.setTimeout(20000, () => {
+        req.destroy(new Error('Timeout ao chamar API Banco Inter'));
+      });
       if (bodyBuffer) req.write(bodyBuffer);
       req.end();
     });
+  }
+
+  parseResponse(text) {
+    if (!text) return {};
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { raw: text };
+    }
   }
 }

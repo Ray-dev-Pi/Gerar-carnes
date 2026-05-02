@@ -15,7 +15,9 @@ export function getConfigStatusHandler(req, res) {
       env.inter.clientId &&
         env.inter.clientSecret &&
         ((env.inter.certBase64 && env.inter.keyBase64) ||
-          (env.inter.certPath && env.inter.keyPath))
+          (env.inter.certPath && env.inter.keyPath) ||
+          env.inter.pfxBase64 ||
+          env.inter.pfxPath)
     ),
     hasMongoUri: Boolean(env.mongodbUri),
     mongoLooksLocal: env.mongodbUri.includes('127.0.0.1') || env.mongodbUri.includes('localhost'),

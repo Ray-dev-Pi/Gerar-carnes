@@ -2,6 +2,24 @@ import PDFDocument from 'pdfkit';
 import { createInterClient } from '../services/inter/index.js';
 import { env } from '../config/env.js';
 
+export async function testInterConnectionHandler(req, res, next) {
+  try {
+    const client = createInterClient();
+
+    if (env.inter.mode !== 'real') {
+      return res.json({
+        ok: true,
+        mode: 'mock',
+        message: 'Modo simulacao ativo. Configure INTER_MODE=real para testar o Banco Inter.'
+      });
+    }
+
+    return res.json(await client.testConnection());
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function downloadInterBoletoPdfHandler(req, res, next) {
   try {
     if (env.inter.mode === 'mock') {
