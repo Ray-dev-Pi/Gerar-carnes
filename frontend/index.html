@@ -53,6 +53,57 @@
 
           <div class="grid">
             <label>
+              E-mail
+              <input id="email" name="email" type="email" placeholder="cliente@email.com" />
+            </label>
+
+            <label>
+              Telefone
+              <input id="phone" name="phone" type="tel" placeholder="85999999999" />
+            </label>
+          </div>
+
+          <label>
+            Endereco
+            <input id="address" name="address" type="text" placeholder="Avenida Brasil" required />
+          </label>
+
+          <div class="grid address-grid">
+            <label>
+              Numero
+              <input id="addressNumber" name="addressNumber" type="text" placeholder="1200" required />
+            </label>
+
+            <label>
+              Complemento
+              <input id="complement" name="complement" type="text" placeholder="Sala 2" />
+            </label>
+          </div>
+
+          <label>
+            Bairro
+            <input id="neighborhood" name="neighborhood" type="text" placeholder="Centro" required />
+          </label>
+
+          <div class="grid address-grid">
+            <label>
+              Cidade
+              <input id="city" name="city" type="text" placeholder="Fortaleza" required />
+            </label>
+
+            <label>
+              UF
+              <input id="state" name="state" type="text" maxlength="2" placeholder="CE" required />
+            </label>
+          </div>
+
+          <label>
+            CEP
+            <input id="zipCode" name="zipCode" type="text" inputmode="numeric" placeholder="60000000" required />
+          </label>
+
+          <div class="grid">
+            <label>
               Valor total
               <input id="totalAmount" name="totalAmount" type="number" step="0.01" min="0.01" placeholder="1200,00" required />
             </label>

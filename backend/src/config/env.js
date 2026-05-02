@@ -7,6 +7,7 @@ const mongodbUri =
   process.env.MONGO_URI ||
   process.env.DATABASE_URL ||
   'mongodb://127.0.0.1:27017/gerar-carnes';
+const interMode = process.env.INTER_MODE || 'mock';
 
 export const env = {
   port: Number(process.env.PORT || 3000),
@@ -39,10 +40,15 @@ export const env = {
     bankName: process.env.BOLETO_BANK_NAME || 'Banco Inter'
   },
   inter: {
-    mode: process.env.INTER_MODE || 'mock',
-    baseUrl: process.env.INTER_BASE_URL || 'https://cdpj.partners.bancointer.com.br',
+    mode: interMode,
+    baseUrl:
+      process.env.INTER_BASE_URL ||
+      (interMode === 'sandbox'
+        ? 'https://cdpj-sandbox.partners.uatinter.co'
+        : 'https://cdpj.partners.bancointer.com.br'),
     clientId: process.env.INTER_CLIENT_ID || '',
     clientSecret: process.env.INTER_CLIENT_SECRET || '',
+    contaCorrente: (process.env.INTER_CONTA_CORRENTE || '').replace(/\D/g, '').replace(/^0+/, ''),
     scope: process.env.INTER_SCOPE || 'boleto-cobranca.write boleto-cobranca.read',
     certPath: process.env.INTER_CERT_PATH || '',
     keyPath: process.env.INTER_KEY_PATH || '',

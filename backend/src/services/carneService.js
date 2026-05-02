@@ -28,7 +28,16 @@ export async function createCarne(payload) {
     const interClient = createInterClient();
     const payer = {
       name: payload.customerName,
-      document: payload.document
+      document: payload.document,
+      email: payload.email,
+      phone: payload.phone,
+      address: payload.address,
+      addressNumber: payload.addressNumber,
+      complement: payload.complement,
+      neighborhood: payload.neighborhood,
+      city: payload.city,
+      state: payload.state,
+      zipCode: payload.zipCode
     };
 
     const boletos = [];
@@ -68,6 +77,12 @@ export function formatCarneResponse(carne, reused = false) {
     status: carne.status,
     customerName: carne.customerName,
     document: carne.document,
+    address: carne.address,
+    addressNumber: carne.addressNumber,
+    neighborhood: carne.neighborhood,
+    city: carne.city,
+    state: carne.state,
+    zipCode: carne.zipCode,
     totalAmount: carne.totalAmount,
     installments: carne.installments,
     firstDueDate: carne.firstDueDate,

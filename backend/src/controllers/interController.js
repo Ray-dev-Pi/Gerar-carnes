@@ -6,7 +6,7 @@ export async function testInterConnectionHandler(req, res, next) {
   try {
     const client = createInterClient();
 
-    if (env.inter.mode !== 'real') {
+    if (!['real', 'sandbox'].includes(env.inter.mode)) {
       return res.json({
         ok: true,
         mode: 'mock',

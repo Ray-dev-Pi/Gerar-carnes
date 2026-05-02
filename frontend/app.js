@@ -89,7 +89,7 @@ async function loadConfigStatus() {
       throw new Error(status.message || 'Nao foi possivel carregar configuracao');
     }
 
-    const isMock = status.interMode !== 'real';
+    const isMock = !['real', 'sandbox'].includes(status.interMode);
     if (status.mongoLooksLocal) {
       configStatus.textContent =
         `MongoDB local configurado (${status.mongodbUriSource}). Na Vercel use MONGODB_URI do MongoDB Atlas. Valor atual: ${status.mongodbUriPreview}`;
@@ -100,8 +100,8 @@ async function loadConfigStatus() {
     configStatus.textContent = isMock
       ? 'Modo simulacao ativo: nao registra boletos reais no Banco Inter.'
       : status.realInterReady
-        ? `Banco Inter real ativo: ${status.bankName}.`
-        : 'Banco Inter real selecionado, mas credenciais/certificado nao estao completos.';
+        ? `Banco Inter ${status.interMode} ativo: ${status.bankName}.`
+        : 'Banco Inter selecionado, mas credenciais/certificado nao estao completos.';
     configStatus.classList.toggle('warning', isMock || !status.realInterReady);
   } catch (error) {
     configStatus.textContent = error.message;
@@ -116,12 +116,30 @@ function formatCurrency(value) {
   }).format(value);
 }
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 function getPayload() {
   const data = new FormData(form);
 
   return {
     customerName: data.get('customerName'),
+    email: data.get('email'),
+    phone: data.get('phone'),
     document: data.get('document'),
+    address: data.get('address'),
+    addressNumber: data.get('addressNumber'),
+    complement: data.get('complement'),
+    neighborhood: data.get('neighborhood'),
+    city: data.get('city'),
+    state: data.get('state'),
+    zipCode: data.get('zipCode'),
     totalAmount: Number(data.get('totalAmount')),
     installments: Number(data.get('installments')),
     firstDueDate: data.get('firstDueDate')
@@ -140,6 +158,7 @@ function renderBoletos(result) {
   for (const boleto of result.boletos) {
     const item = document.createElement('article');
     item.className = 'boleto';
+    const pixCode = boleto.pixCopiaECola || '';
     item.innerHTML = `
       <div class="boleto-top">
         <div>
@@ -149,14 +168,37 @@ function renderBoletos(result) {
         <div class="boleto-amount">${formatCurrency(boleto.amount)}</div>
       </div>
       <div class="line">${boleto.linhaDigitavel || 'Linha digitavel indisponivel'}</div>
+      ${
+        pixCode
+          ? `<div class="pix-box">
+              <span>Pix copia e cola</span>
+              <div class="line">${escapeHtml(pixCode)}</div>
+              <button class="copy-pix" type="button" data-pix="${escapeHtml(pixCode)}">Copiar Pix</button>
+            </div>`
+          : ''
+      }
       <div class="actions">
         ${boleto.bankPdfUrl ? `<a href="${withToken(boleto.bankPdfUrl)}" target="_blank" rel="noreferrer">Visualizar boleto</a>` : ''}
-        ${boleto.pixCopiaECola ? '<span>PIX disponivel no PDF do carne</span>' : ''}
       </div>
     `;
     boletosEl.appendChild(item);
   }
 }
+
+boletosEl.addEventListener('click', async (event) => {
+  const button = event.target.closest('.copy-pix');
+  if (!button) return;
+
+  try {
+    await navigator.clipboard.writeText(button.dataset.pix);
+    button.textContent = 'Pix copiado';
+    setTimeout(() => {
+      button.textContent = 'Copiar Pix';
+    }, 1600);
+  } catch {
+    setMessage('Nao foi possivel copiar automaticamente. Selecione o codigo Pix manualmente.', 'error');
+  }
+});
 
 loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();

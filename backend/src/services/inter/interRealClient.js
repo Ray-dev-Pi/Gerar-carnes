@@ -72,7 +72,8 @@ export class InterRealClient {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...this.accountHeaders()
       },
       body: JSON.stringify(payload)
     });
@@ -84,8 +85,8 @@ export class InterRealClient {
 
     return {
       codigoSolicitacao,
-      linhaDigitavel: detail.linhaDigitavel || created.linhaDigitavel,
-      codigoBarras: detail.codigoBarras || created.codigoBarras,
+      linhaDigitavel: detail.boleto?.linhaDigitavel || detail.linhaDigitavel || created.linhaDigitavel,
+      codigoBarras: detail.boleto?.codigoBarras || detail.codigoBarras || created.codigoBarras,
       bankPdfUrl: codigoSolicitacao
         ? `${env.appUrl}/api/inter/boletos/${codigoSolicitacao}/pdf`
         : undefined,
@@ -103,8 +104,8 @@ export class InterRealClient {
         detail.beneficiario?.agenciaCodigoBeneficiario ||
         detail.agenciaCodigoBeneficiario ||
         env.boleto.agencyCode,
-      nossoNumero: detail.nossoNumero || created.nossoNumero,
-      status: 'generated',
+      nossoNumero: detail.boleto?.nossoNumero || detail.nossoNumero || created.nossoNumero,
+      status: detail.cobranca?.situacao || 'generated',
       rawResponse: { created, detail }
     };
   }
@@ -123,16 +124,22 @@ export class InterRealClient {
   async getBoletoDetail(token, codigoSolicitacao) {
     return this.request(`/cobranca/v3/cobrancas/${codigoSolicitacao}`, {
       method: 'GET',
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}`, ...this.accountHeaders() }
     });
   }
 
   async getBoletoPdf(codigoSolicitacao) {
     const token = await this.getAccessToken();
-    return this.requestBuffer(`/cobranca/v3/cobrancas/${codigoSolicitacao}/pdf`, {
+    const response = await this.request(`/cobranca/v3/cobrancas/${codigoSolicitacao}/pdf`, {
       method: 'GET',
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}`, ...this.accountHeaders() }
     });
+
+    if (!response.pdf) {
+      throw new Error('Banco Inter nao retornou o PDF da cobranca');
+    }
+
+    return Buffer.from(response.pdf, 'base64');
   }
 
   buildChargePayload({ payer, installment }) {
@@ -144,9 +151,19 @@ export class InterRealClient {
       dataVencimento: installment.dueDate,
       numDiasAgenda: 60,
       pagador: {
+        email: payer.email || undefined,
+        ddd: payer.phone ? payer.phone.slice(0, 2) : undefined,
+        telefone: payer.phone ? payer.phone.slice(2) : undefined,
+        numero: payer.addressNumber,
+        complemento: payer.complement || undefined,
         cpfCnpj: payer.document,
         tipoPessoa: personType,
-        nome: payer.name
+        nome: payer.name,
+        endereco: payer.address,
+        bairro: payer.neighborhood,
+        cidade: payer.city,
+        uf: payer.state,
+        cep: payer.zipCode
       },
       multa: {
         codigo: 'PERCENTUAL',
@@ -159,8 +176,13 @@ export class InterRealClient {
       mensagem: {
         linha1: `Parcela ${installment.installmentNumber}`,
         linha2: 'Carne gerado automaticamente'
-      }
+      },
+      formasRecebimento: ['BOLETO', 'PIX']
     };
+  }
+
+  accountHeaders() {
+    return env.inter.contaCorrente ? { 'x-conta-corrente': env.inter.contaCorrente } : {};
   }
 
   async request(path, options) {

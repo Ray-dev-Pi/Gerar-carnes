@@ -10,6 +10,9 @@ export function createIdempotencyHash(payload) {
   const stablePayload = JSON.stringify({
     customerName: payload.customerName.trim().toUpperCase(),
     document: payload.document,
+    address: payload.address?.trim().toUpperCase(),
+    addressNumber: payload.addressNumber?.trim().toUpperCase(),
+    zipCode: payload.zipCode,
     totalAmount: Number(payload.totalAmount).toFixed(2),
     installments: payload.installments,
     firstDueDate: payload.firstDueDate

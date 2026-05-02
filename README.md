@@ -69,6 +69,7 @@ INTER_CLIENT_ID=seu_client_id
 INTER_CLIENT_SECRET=seu_client_secret
 INTER_CERT_PATH=C:/caminho/certificado.crt
 INTER_KEY_PATH=C:/caminho/chave.key
+INTER_CONTA_CORRENTE=123456789
 INTER_BASE_URL=https://cdpj.partners.bancointer.com.br
 INTER_SCOPE=boleto-cobranca.write boleto-cobranca.read
 ```
@@ -120,9 +121,18 @@ INTER_MODE=real
 INTER_CLIENT_ID=seu_client_id
 INTER_CLIENT_SECRET=seu_client_secret
 INTER_SCOPE=boleto-cobranca.write boleto-cobranca.read
+INTER_CONTA_CORRENTE=123456789
 INTER_CERT_BASE64=conteudo_base64_do_certificado
 INTER_KEY_BASE64=conteudo_base64_da_chave
 ```
+
+Para testar no ambiente sandbox do Inter, use:
+
+```env
+INTER_MODE=sandbox
+```
+
+Nesse modo, se `INTER_BASE_URL` nao for informado, o sistema usa automaticamente `https://cdpj-sandbox.partners.uatinter.co`.
 
 Use MongoDB Atlas ou outro Mongo acessivel pela internet. `mongodb://127.0.0.1:27017` nao funciona na Vercel, porque la o servidor nao enxerga o seu computador.
 

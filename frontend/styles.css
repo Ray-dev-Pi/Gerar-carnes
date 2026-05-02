@@ -141,6 +141,10 @@ input:focus {
   gap: 12px;
 }
 
+.address-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
 button,
 .pdf-link {
   min-height: 44px;
@@ -226,6 +230,24 @@ button:disabled {
   background: #f7f9fb;
   border-radius: 6px;
   padding: 9px;
+}
+
+.pix-box {
+  display: grid;
+  gap: 8px;
+}
+
+.pix-box span {
+  color: #3f4a57;
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.copy-pix {
+  justify-self: start;
+  min-height: 36px;
+  background: #eef2f5;
+  color: #344052;
 }
 
 .actions {
