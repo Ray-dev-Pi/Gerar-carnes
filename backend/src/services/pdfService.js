@@ -14,13 +14,6 @@ const storageDir = process.env.VERCEL
   : path.resolve(__dirname, '../../storage/carnes');
 
 async function renderCarnePdf(doc, carne) {
-  doc.fontSize(16).text(`Carne ${carne.carneId}`, { align: 'center' });
-  doc.moveDown(0.4);
-  doc.fontSize(9).text(`Cliente: ${carne.customerName} | Documento: ${carne.document}`, {
-    align: 'center'
-  });
-  doc.moveDown(0.7);
-
   for (const [index, boleto] of carne.boletos.entries()) {
     if (index > 0) doc.addPage();
     await renderBoletoPage(doc, carne, boleto);
@@ -61,11 +54,13 @@ async function drawBarcode(doc, value, x, y) {
 }
 
 async function renderBoletoPage(doc, carne, boleto) {
-  const left = 24;
-  const top = 30;
-  const receiptW = 150;
+  const left = 18;
+  const top = 18;
+  const pageW = doc.page.width;
+  const pageH = doc.page.height;
+  const receiptW = 178;
   const mainX = left + receiptW + 12;
-  const mainW = 560 - mainX;
+  const mainW = pageW - mainX - 18;
   const bankName = boleto.bankName || env.boleto.bankName;
   const bankCode = boleto.bankCode || env.boleto.bankCode;
   const beneficiaryName = boleto.beneficiaryName || env.boleto.beneficiaryName;
@@ -73,33 +68,25 @@ async function renderBoletoPage(doc, carne, boleto) {
   const agencyCode = boleto.agencyCode || env.boleto.agencyCode;
   const linhaDigitavel = boleto.linhaDigitavel || 'Linha digitavel retornada pelo Banco Inter';
 
-  doc.fontSize(7).fillColor('#777777').text('Corte na linha pontilhada', left, top - 10);
-  doc
-    .moveTo(left, top - 2)
-    .lineTo(560, top - 2)
-    .dash(3, { space: 3 })
-    .stroke('#c9c9c9')
-    .undash();
-
-  doc.rect(left, top, receiptW, 720).stroke('#8a8a8a');
+  doc.rect(left, top, receiptW, pageH - 48).stroke('#8a8a8a');
   doc.fontSize(8).fillColor('#111111').text('SEU LOGO AQUI', left + 8, top + 10);
   doc.fontSize(7).text('Recibo do Pagador', left + 86, top + 10);
 
-  field(doc, 'Parcela/Plano', `${boleto.installmentNumber}/${carne.installments}`, left, top + 35, 54, 34);
-  field(doc, 'Vencimento', boleto.dueDate, left + 54, top + 35, 48, 34);
-  field(doc, 'Valor', formatCurrencyBRL(boleto.amount), left + 102, top + 35, 48, 34);
-  field(doc, 'Agencia / Codigo do Beneficiario', agencyCode, left, top + 69, receiptW, 32);
-  field(doc, 'Nosso Numero', boleto.nossoNumero || boleto.seuNumero, left, top + 101, receiptW, 32);
-  field(doc, 'Numero Documento', boleto.seuNumero, left, top + 133, 95, 32);
-  field(doc, 'Especie Doc.', 'DM', left + 95, top + 133, 55, 32);
-  field(doc, '(=) Valor do Documento', formatCurrencyBRL(boleto.amount), left, top + 165, receiptW, 32);
-  field(doc, '(-) Desconto / Abatimento', '', left, top + 197, receiptW, 32);
-  field(doc, '(+) Mora / Multa', '', left, top + 229, receiptW, 32);
-  field(doc, '(=) Valor Cobrado', '', left, top + 261, receiptW, 32);
-  field(doc, 'Pagador', `${carne.customerName}\n${carne.document}`, left, top + 303, receiptW, 72);
-  field(doc, 'Beneficiario', `${beneficiaryName}\n${beneficiaryDocument}`, left, top + 375, receiptW, 72);
+  field(doc, 'Parcela/Plano', `${boleto.installmentNumber}/${carne.installments}`, left, top + 35, 62, 30);
+  field(doc, 'Vencimento', boleto.dueDate, left + 62, top + 35, 58, 30);
+  field(doc, 'Valor', formatCurrencyBRL(boleto.amount), left + 120, top + 35, 58, 30);
+  field(doc, 'Agencia / Codigo do Beneficiario', agencyCode, left, top + 65, receiptW, 28);
+  field(doc, 'Nosso Numero', boleto.nossoNumero || boleto.seuNumero, left, top + 93, receiptW, 28);
+  field(doc, 'Numero Documento', boleto.seuNumero, left, top + 121, 112, 28);
+  field(doc, 'Especie Doc.', 'DM', left + 112, top + 121, 66, 28);
+  field(doc, '(=) Valor do Documento', formatCurrencyBRL(boleto.amount), left, top + 149, receiptW, 28);
+  field(doc, '(-) Desconto / Abatimento', '', left, top + 177, receiptW, 28);
+  field(doc, '(+) Mora / Multa', '', left, top + 205, receiptW, 28);
+  field(doc, '(=) Valor Cobrado', '', left, top + 233, receiptW, 28);
+  field(doc, 'Pagador', `${carne.customerName}\n${carne.document}`, left, top + 268, receiptW, 56);
+  field(doc, 'Beneficiario', `${beneficiaryName}\n${beneficiaryDocument}`, left, top + 324, receiptW, 58);
 
-  doc.rect(mainX, top, mainW, 720).stroke('#8a8a8a');
+  doc.rect(mainX, top, mainW, pageH - 48).stroke('#8a8a8a');
   doc.fontSize(16).fillColor('#f15a24').text(bankName, mainX + 8, top + 8, { width: 110 });
   doc.fontSize(10).fillColor('#111111').text(bankCode, mainX + 120, top + 12, { width: 45 });
   doc
@@ -109,56 +96,56 @@ async function renderBoletoPage(doc, carne, boleto) {
   doc.fontSize(9).text(linhaDigitavel, mainX + 178, top + 12, { width: mainW - 186 });
 
   const rowY = top + 40;
-  field(doc, 'Local de Pagamento', 'Pagavel em qualquer banco ate a data de vencimento.', mainX, rowY, mainW - 125, 34);
-  field(doc, 'Vencimento', boleto.dueDate, mainX + mainW - 125, rowY, 125, 34);
-  field(doc, 'Beneficiario', `${beneficiaryName} - CPF/CNPJ ${beneficiaryDocument}`, mainX, rowY + 34, mainW - 125, 34);
-  field(doc, 'Agencia / Codigo do Beneficiario', agencyCode, mainX + mainW - 125, rowY + 34, 125, 34);
-  field(doc, 'Data Documento', new Date(carne.createdAt || Date.now()).toISOString().slice(0, 10), mainX, rowY + 68, 72, 34);
-  field(doc, 'Numero Documento', boleto.seuNumero, mainX + 72, rowY + 68, 108, 34);
-  field(doc, 'Especie Doc.', 'DM', mainX + 180, rowY + 68, 55, 34);
-  field(doc, 'Aceite', 'N', mainX + 235, rowY + 68, 45, 34);
-  field(doc, 'Data Processamento', new Date(carne.updatedAt || Date.now()).toISOString().slice(0, 10), mainX + 280, rowY + 68, 95, 34);
-  field(doc, 'Nosso Numero', boleto.nossoNumero || boleto.seuNumero, mainX + mainW - 125, rowY + 68, 125, 34);
-  field(doc, 'Uso do Banco', '', mainX, rowY + 102, 72, 34);
-  field(doc, 'Carteira', '112', mainX + 72, rowY + 102, 54, 34);
-  field(doc, 'Especie', 'R$', mainX + 126, rowY + 102, 45, 34);
-  field(doc, 'Quantidade', '1', mainX + 171, rowY + 102, 70, 34);
-  field(doc, 'Valor', formatCurrencyBRL(boleto.amount), mainX + 241, rowY + 102, 134, 34);
-  field(doc, '(=) Valor do Documento', formatCurrencyBRL(boleto.amount), mainX + mainW - 125, rowY + 102, 125, 34);
+  field(doc, 'Local de Pagamento', 'Pagavel em qualquer banco ate a data de vencimento.', mainX, rowY, mainW - 150, 30);
+  field(doc, 'Vencimento', boleto.dueDate, mainX + mainW - 150, rowY, 150, 30);
+  field(doc, 'Beneficiario', `${beneficiaryName} - CPF/CNPJ ${beneficiaryDocument}`, mainX, rowY + 30, mainW - 150, 30);
+  field(doc, 'Agencia / Codigo do Beneficiario', agencyCode, mainX + mainW - 150, rowY + 30, 150, 30);
+  field(doc, 'Data Documento', new Date(carne.createdAt || Date.now()).toISOString().slice(0, 10), mainX, rowY + 60, 82, 30);
+  field(doc, 'Numero Documento', boleto.seuNumero, mainX + 82, rowY + 60, 128, 30);
+  field(doc, 'Especie Doc.', 'DM', mainX + 210, rowY + 60, 58, 30);
+  field(doc, 'Aceite', 'N', mainX + 268, rowY + 60, 48, 30);
+  field(doc, 'Data Processamento', new Date(carne.updatedAt || Date.now()).toISOString().slice(0, 10), mainX + 316, rowY + 60, 108, 30);
+  field(doc, 'Nosso Numero', boleto.nossoNumero || boleto.seuNumero, mainX + mainW - 150, rowY + 60, 150, 30);
+  field(doc, 'Uso do Banco', '', mainX, rowY + 90, 82, 30);
+  field(doc, 'Carteira', '112', mainX + 82, rowY + 90, 62, 30);
+  field(doc, 'Especie', 'R$', mainX + 144, rowY + 90, 52, 30);
+  field(doc, 'Quantidade', '1', mainX + 196, rowY + 90, 76, 30);
+  field(doc, 'Valor', formatCurrencyBRL(boleto.amount), mainX + 272, rowY + 90, 152, 30);
+  field(doc, '(=) Valor do Documento', formatCurrencyBRL(boleto.amount), mainX + mainW - 150, rowY + 90, 150, 30);
 
   field(
     doc,
     'Instrucoes',
     'Nao receber apos 30 dias do vencimento.\nApos o vencimento cobrar multa e juros conforme contrato.\nAutenticacao mecanica no verso.',
     mainX,
-    rowY + 136,
-    mainW - 125,
-    118,
+    rowY + 120,
+    mainW - 150,
+    90,
     { fontSize: 7 }
   );
-  field(doc, '(-) Desconto / Abatimento', '', mainX + mainW - 125, rowY + 136, 125, 30);
-  field(doc, '(-) Outras Deducoes', '', mainX + mainW - 125, rowY + 166, 125, 30);
-  field(doc, '(+) Mora / Multa', '', mainX + mainW - 125, rowY + 196, 125, 30);
-  field(doc, '(=) Valor Cobrado', '', mainX + mainW - 125, rowY + 226, 125, 28);
+  field(doc, '(-) Desconto / Abatimento', '', mainX + mainW - 150, rowY + 120, 150, 30);
+  field(doc, '(-) Outras Deducoes', '', mainX + mainW - 150, rowY + 150, 150, 30);
+  field(doc, '(+) Mora / Multa', '', mainX + mainW - 150, rowY + 180, 150, 30);
+  field(doc, '(=) Valor Cobrado', '', mainX + mainW - 150, rowY + 210, 150, 28);
 
   field(
     doc,
     'Pagador',
     `${carne.customerName}\nCPF/CNPJ: ${carne.document}`,
     mainX,
-    rowY + 254,
-    mainW - 125,
-    70
+    rowY + 218,
+    mainW - 150,
+    56
   );
-  field(doc, 'CPF/CNPJ', carne.document, mainX + mainW - 125, rowY + 254, 125, 70);
+  field(doc, 'CPF/CNPJ', carne.document, mainX + mainW - 150, rowY + 238, 150, 36);
 
   if (boleto.pixCopiaECola) {
     const qr = await QRCode.toDataURL(boleto.pixCopiaECola, { margin: 1, width: 92 });
-    doc.image(qr, mainX + mainW - 95, rowY + 335, { width: 82 });
-    doc.fontSize(6.5).fillColor('#111111').text('QR Code PIX', mainX + mainW - 88, rowY + 419);
+    doc.image(qr, mainX + mainW - 96, rowY + 284, { width: 82 });
+    doc.fontSize(6.5).fillColor('#111111').text('QR Code PIX', mainX + mainW - 88, rowY + 368);
   }
 
-  await drawBarcode(doc, boleto.codigoBarras, mainX + 10, rowY + 370);
+  await drawBarcode(doc, boleto.codigoBarras, mainX + 12, rowY + 302);
   doc
     .fontSize(6.5)
     .fillColor('#111111')
@@ -166,10 +153,20 @@ async function renderBoletoPage(doc, carne, boleto) {
       width: 180,
       align: 'right'
     });
+
+  doc
+    .moveTo(left, pageH - 26)
+    .lineTo(pageW - 18, pageH - 26)
+    .dash(3, { space: 3 })
+    .stroke('#c9c9c9')
+    .undash();
+  doc.fontSize(7).fillColor('#777777').text('Corte na linha pontilhada', left, pageH - 22, {
+    lineBreak: false
+  });
 }
 
 export async function generateCarnePdfBuffer(carne) {
-  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  const doc = new PDFDocument({ margin: 18, size: 'A4', layout: 'landscape' });
   const chunks = [];
 
   doc.on('data', (chunk) => chunks.push(chunk));
@@ -188,7 +185,7 @@ export async function generateCarnePdf(carne) {
   await fs.promises.mkdir(storageDir, { recursive: true });
   const pdfPath = path.join(storageDir, `${carne.carneId}.pdf`);
 
-  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  const doc = new PDFDocument({ margin: 18, size: 'A4', layout: 'landscape' });
   const stream = fs.createWriteStream(pdfPath);
   doc.pipe(stream);
 
