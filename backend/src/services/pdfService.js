@@ -12,6 +12,8 @@ const __dirname = path.dirname(__filename);
 const storageDir = process.env.VERCEL
   ? '/tmp/gerar-carnes'
   : path.resolve(__dirname, '../../storage/carnes');
+const logoPath = path.resolve(__dirname, '../../assets/informatica.png');
+const carnePageSize = [980, 470];
 
 async function renderCarnePdf(doc, carne) {
   for (const [index, boleto] of carne.boletos.entries()) {
@@ -29,28 +31,62 @@ function field(doc, label, value, x, y, w, h, options = {}) {
     .text(value || '-', x + 3, y + 12, { width: w - 6, height: h - 13 });
 }
 
-async function drawBarcode(doc, value, x, y) {
+function drawLogo(doc, x, y, size) {
+  if (!fs.existsSync(logoPath)) {
+    doc.fontSize(8).fillColor('#111111').text('INFOTMATICA-DEV', x, y + 8, { width: size * 2 });
+    return;
+  }
+
+  doc.image(logoPath, x, y, {
+    fit: [size, size],
+    align: 'center',
+    valign: 'center'
+  });
+}
+
+function pixPaymentBox(doc, pixCode, x, y, w, h) {
+  if (!pixCode) return;
+
+  doc.rect(x, y, w, h).stroke('#b7b7b7');
+  doc.fontSize(5.8).fillColor('#333333').text('Codigo Pix copia e cola', x + 3, y + 3, {
+    width: w - 6
+  });
+  doc
+    .font('Courier')
+    .fontSize(5.4)
+    .fillColor('#111111')
+    .text(pixCode, x + 3, y + 13, {
+      width: w - 6,
+      height: h - 16,
+      lineGap: 0.6
+    })
+    .font('Helvetica');
+}
+
+async function drawBarcode(doc, value, x, y, options = {}) {
   const digits = String(value || '').replace(/\D/g, '');
+  const width = options.width || 360;
+  const height = options.height || 56;
 
   if (digits.length !== 44) {
     doc
       .fontSize(6.5)
       .fillColor('#111111')
-      .text('Codigo de barras indisponivel', x, y + 16, { width: 260, align: 'center' });
+      .text('Codigo de barras indisponivel', x, y + 18, { width, align: 'center' });
     return;
   }
 
   const png = await bwipjs.toBuffer({
     bcid: 'interleaved2of5',
     text: digits,
-    scale: 2,
-    height: 12,
+    scale: 3,
+    height: 14,
     includetext: false,
     paddingwidth: 0,
     paddingheight: 0
   });
 
-  doc.image(png, x, y, { width: 260, height: 42 });
+  doc.image(png, x, y, { width, height });
 }
 
 async function renderBoletoPage(doc, carne, boleto) {
@@ -67,35 +103,39 @@ async function renderBoletoPage(doc, carne, boleto) {
   const beneficiaryDocument = boleto.beneficiaryDocument || env.boleto.beneficiaryDocument;
   const agencyCode = boleto.agencyCode || env.boleto.agencyCode;
   const linhaDigitavel = boleto.linhaDigitavel || 'Linha digitavel retornada pelo Banco Inter';
+  const pixCode = boleto.pixCopiaECola || '';
 
   doc.rect(left, top, receiptW, pageH - 48).stroke('#8a8a8a');
-  doc.fontSize(8).fillColor('#111111').text('SEU LOGO AQUI', left + 8, top + 10);
-  doc.fontSize(7).text('Recibo do Pagador', left + 86, top + 10);
+  drawLogo(doc, left + 8, top + 7, 42);
+  doc.fontSize(7).fillColor('#111111').text('Recibo do Pagador', left + 62, top + 20);
 
-  field(doc, 'Parcela/Plano', `${boleto.installmentNumber}/${carne.installments}`, left, top + 35, 62, 30);
-  field(doc, 'Vencimento', boleto.dueDate, left + 62, top + 35, 58, 30);
-  field(doc, 'Valor', formatCurrencyBRL(boleto.amount), left + 120, top + 35, 58, 30);
-  field(doc, 'Agencia / Codigo do Beneficiario', agencyCode, left, top + 65, receiptW, 28);
-  field(doc, 'Nosso Numero', boleto.nossoNumero || boleto.seuNumero, left, top + 93, receiptW, 28);
-  field(doc, 'Numero Documento', boleto.seuNumero, left, top + 121, 112, 28);
-  field(doc, 'Especie Doc.', 'DM', left + 112, top + 121, 66, 28);
-  field(doc, '(=) Valor do Documento', formatCurrencyBRL(boleto.amount), left, top + 149, receiptW, 28);
-  field(doc, '(-) Desconto / Abatimento', '', left, top + 177, receiptW, 28);
-  field(doc, '(+) Mora / Multa', '', left, top + 205, receiptW, 28);
-  field(doc, '(=) Valor Cobrado', '', left, top + 233, receiptW, 28);
-  field(doc, 'Pagador', `${carne.customerName}\n${carne.document}`, left, top + 268, receiptW, 56);
-  field(doc, 'Beneficiario', `${beneficiaryName}\n${beneficiaryDocument}`, left, top + 324, receiptW, 58);
+  const receiptY = top + 58;
+  field(doc, 'Parcela/Plano', `${boleto.installmentNumber}/${carne.installments}`, left, receiptY, 62, 30);
+  field(doc, 'Vencimento', boleto.dueDate, left + 62, receiptY, 58, 30);
+  field(doc, 'Valor', formatCurrencyBRL(boleto.amount), left + 120, receiptY, 58, 30);
+  field(doc, 'Agencia / Codigo do Beneficiario', agencyCode, left, receiptY + 30, receiptW, 28);
+  field(doc, 'Nosso Numero', boleto.nossoNumero || boleto.seuNumero, left, receiptY + 58, receiptW, 28);
+  field(doc, 'Numero Documento', boleto.seuNumero, left, receiptY + 86, 112, 28);
+  field(doc, 'Especie Doc.', 'DM', left + 112, receiptY + 86, 66, 28);
+  field(doc, '(=) Valor do Documento', formatCurrencyBRL(boleto.amount), left, receiptY + 114, receiptW, 28);
+  field(doc, '(-) Desconto / Abatimento', '', left, receiptY + 142, receiptW, 28);
+  field(doc, '(+) Mora / Multa', '', left, receiptY + 170, receiptW, 28);
+  field(doc, '(=) Valor Cobrado', '', left, receiptY + 198, receiptW, 28);
+  field(doc, 'Pagador', `${carne.customerName}\n${carne.document}`, left, receiptY + 226, receiptW, 42);
+  field(doc, 'Beneficiario', `${beneficiaryName}\n${beneficiaryDocument}`, left, receiptY + 268, receiptW, 42);
+  pixPaymentBox(doc, pixCode, left, receiptY + 310, receiptW, 54);
 
   doc.rect(mainX, top, mainW, pageH - 48).stroke('#8a8a8a');
-  doc.fontSize(16).fillColor('#f15a24').text(bankName, mainX + 8, top + 8, { width: 110 });
-  doc.fontSize(10).fillColor('#111111').text(bankCode, mainX + 120, top + 12, { width: 45 });
+  drawLogo(doc, mainX + 8, top + 5, 42);
+  doc.fontSize(15).fillColor('#f15a24').text(bankName, mainX + 58, top + 10, { width: 98 });
+  doc.fontSize(10).fillColor('#111111').text(bankCode, mainX + 158, top + 14, { width: 45 });
   doc
-    .moveTo(mainX + 170, top + 8)
-    .lineTo(mainX + 170, top + 32)
+    .moveTo(mainX + 205, top + 8)
+    .lineTo(mainX + 205, top + 42)
     .stroke('#111111');
-  doc.fontSize(9).text(linhaDigitavel, mainX + 178, top + 12, { width: mainW - 186 });
+  doc.fontSize(9).text(linhaDigitavel, mainX + 214, top + 15, { width: mainW - 222 });
 
-  const rowY = top + 40;
+  const rowY = top + 52;
   field(doc, 'Local de Pagamento', 'Pagavel em qualquer banco ate a data de vencimento.', mainX, rowY, mainW - 150, 30);
   field(doc, 'Vencimento', boleto.dueDate, mainX + mainW - 150, rowY, 150, 30);
   field(doc, 'Beneficiario', `${beneficiaryName} - CPF/CNPJ ${beneficiaryDocument}`, mainX, rowY + 30, mainW - 150, 30);
@@ -116,40 +156,40 @@ async function renderBoletoPage(doc, carne, boleto) {
   field(
     doc,
     'Instrucoes',
-    'Nao receber apos 30 dias do vencimento.\nApos o vencimento cobrar multa e juros conforme contrato.\nAutenticacao mecanica no verso.',
+    'Nao receber apos 30 dias do vencimento.\nApos o vencimento cobrar multa e juros conforme contrato.',
     mainX,
     rowY + 120,
     mainW - 150,
-    90,
+    66,
     { fontSize: 7 }
   );
   field(doc, '(-) Desconto / Abatimento', '', mainX + mainW - 150, rowY + 120, 150, 30);
   field(doc, '(-) Outras Deducoes', '', mainX + mainW - 150, rowY + 150, 150, 30);
-  field(doc, '(+) Mora / Multa', '', mainX + mainW - 150, rowY + 180, 150, 30);
-  field(doc, '(=) Valor Cobrado', '', mainX + mainW - 150, rowY + 210, 150, 28);
+  field(doc, '(+) Mora / Multa', '', mainX + mainW - 150, rowY + 180, 150, 28);
 
   field(
     doc,
     'Pagador',
     `${carne.customerName}\nCPF/CNPJ: ${carne.document}`,
     mainX,
-    rowY + 218,
+    rowY + 188,
     mainW - 150,
-    56
+    42
   );
-  field(doc, 'CPF/CNPJ', carne.document, mainX + mainW - 150, rowY + 238, 150, 36);
+  field(doc, 'CPF/CNPJ', carne.document, mainX + mainW - 150, rowY + 208, 150, 30);
 
-  if (boleto.pixCopiaECola) {
-    const qr = await QRCode.toDataURL(boleto.pixCopiaECola, { margin: 1, width: 92 });
-    doc.image(qr, mainX + mainW - 96, rowY + 284, { width: 82 });
-    doc.fontSize(6.5).fillColor('#111111').text('QR Code PIX', mainX + mainW - 88, rowY + 368);
+  if (pixCode) {
+    pixPaymentBox(doc, pixCode, mainX, rowY + 238, mainW - 112, 48);
+    const qr = await QRCode.toDataURL(pixCode, { margin: 1, width: 104 });
+    doc.image(qr, mainX + mainW - 96, rowY + 238, { width: 82 });
+    doc.fontSize(6.5).fillColor('#111111').text('QR Code PIX', mainX + mainW - 87, rowY + 321);
   }
 
-  await drawBarcode(doc, boleto.codigoBarras, mainX + 12, rowY + 302);
+  await drawBarcode(doc, boleto.codigoBarras, mainX + 14, rowY + 312, { width: 390, height: 58 });
   doc
     .fontSize(6.5)
     .fillColor('#111111')
-    .text('Autenticacao Mecanica / FICHA DE COMPENSACAO', mainX + mainW - 190, rowY + 430, {
+    .text('Autenticacao Mecanica / FICHA DE COMPENSACAO', mainX + mainW - 190, rowY + 374, {
       width: 180,
       align: 'right'
     });
@@ -166,7 +206,7 @@ async function renderBoletoPage(doc, carne, boleto) {
 }
 
 export async function generateCarnePdfBuffer(carne) {
-  const doc = new PDFDocument({ margin: 18, size: 'A4', layout: 'landscape' });
+  const doc = new PDFDocument({ margin: 18, size: carnePageSize });
   const chunks = [];
 
   doc.on('data', (chunk) => chunks.push(chunk));
@@ -185,7 +225,7 @@ export async function generateCarnePdf(carne) {
   await fs.promises.mkdir(storageDir, { recursive: true });
   const pdfPath = path.join(storageDir, `${carne.carneId}.pdf`);
 
-  const doc = new PDFDocument({ margin: 18, size: 'A4', layout: 'landscape' });
+  const doc = new PDFDocument({ margin: 18, size: carnePageSize });
   const stream = fs.createWriteStream(pdfPath);
   doc.pipe(stream);
 
