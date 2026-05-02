@@ -4,6 +4,10 @@ import { connectDatabase } from '../backend/src/config/database.js';
 let databasePromise;
 
 export default async function handler(req, res) {
+  if (req.url === '/api/index.js') {
+    req.url = req.headers['x-original-url'] || '/api/health';
+  }
+
   const needsDatabase = !req.url?.startsWith('/api/auth') && !req.url?.startsWith('/api/health');
 
   if (needsDatabase) {

@@ -34,6 +34,14 @@ function setLoggedIn(isLoggedIn) {
   document.body.classList.toggle('locked', !isLoggedIn);
 }
 
+function friendlyNetworkError(error) {
+  if (error instanceof TypeError && error.message === 'Failed to fetch') {
+    return `Nao consegui conectar em ${API_BASE_URL}. Se voce abriu o HTML localmente, rode o backend em localhost:3000. Se esta na Vercel, confirme que o deploy mais recente contem a pasta api/ e teste /api/health.`;
+  }
+
+  return error.message;
+}
+
 function authHeaders() {
   return {
     'Content-Type': 'application/json',
@@ -170,7 +178,7 @@ loginForm.addEventListener('submit', async (event) => {
     setLoggedIn(true);
     loadConfigStatus();
   } catch (error) {
-    loginMessage.textContent = error.message;
+    loginMessage.textContent = friendlyNetworkError(error);
     loginMessage.classList.remove('hidden');
     loginMessage.classList.add('error');
   } finally {
@@ -209,7 +217,7 @@ form.addEventListener('submit', async (event) => {
     setMessage(result.reused ? 'Carne ja existia; exibindo registro existente.' : 'Carne gerado com sucesso.');
     renderBoletos(result);
   } catch (error) {
-    setMessage(error.message, 'error');
+    setMessage(friendlyNetworkError(error), 'error');
     resultTitle.textContent = 'Falha ao gerar carne';
   } finally {
     submitButton.disabled = false;
