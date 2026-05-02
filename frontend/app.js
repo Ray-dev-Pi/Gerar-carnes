@@ -13,6 +13,7 @@ const boletosEl = document.querySelector('#boletos');
 const resultTitle = document.querySelector('#resultTitle');
 const pdfLink = document.querySelector('#pdfLink');
 const firstDueDate = document.querySelector('#firstDueDate');
+const configStatus = document.querySelector('#configStatus');
 
 firstDueDate.value = new Date().toISOString().slice(0, 10);
 
@@ -40,6 +41,23 @@ function authHeaders() {
   };
 }
 
+async function readJsonResponse(response) {
+  const text = await response.text();
+
+  if (!text) return {};
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return {
+      message:
+        cleanText ||
+        'A Vercel retornou uma resposta inesperada. Veja os logs da Function no painel da Vercel.'
+    };
+  }
+}
+
 function withToken(url) {
   const separator = url.includes('?') ? '&' : '?';
   return `${url}${separator}token=${encodeURIComponent(getToken())}`;
@@ -48,6 +66,32 @@ function withToken(url) {
 function setMessage(text, type = 'info') {
   message.textContent = text;
   message.classList.toggle('error', type === 'error');
+}
+
+async function loadConfigStatus() {
+  if (!getToken()) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/config/status`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    const status = await readJsonResponse(response);
+
+    if (!response.ok) {
+      throw new Error(status.message || 'Nao foi possivel carregar configuracao');
+    }
+
+    const isMock = status.interMode !== 'real';
+    configStatus.textContent = isMock
+      ? 'Modo simulacao ativo: nao registra boletos reais no Banco Inter.'
+      : status.realInterReady
+        ? `Banco Inter real ativo: ${status.bankName}.`
+        : 'Banco Inter real selecionado, mas credenciais/certificado nao estao completos.';
+    configStatus.classList.toggle('warning', isMock || !status.realInterReady);
+  } catch (error) {
+    configStatus.textContent = error.message;
+    configStatus.classList.add('warning');
+  }
 }
 
 function formatCurrency(value) {
@@ -116,7 +160,7 @@ loginForm.addEventListener('submit', async (event) => {
         password: data.get('password')
       })
     });
-    const result = await response.json();
+    const result = await readJsonResponse(response);
 
     if (!response.ok) {
       throw new Error(result.message || 'Falha ao autenticar');
@@ -124,6 +168,7 @@ loginForm.addEventListener('submit', async (event) => {
 
     setToken(result.token);
     setLoggedIn(true);
+    loadConfigStatus();
   } catch (error) {
     loginMessage.textContent = error.message;
     loginMessage.classList.remove('hidden');
@@ -154,7 +199,7 @@ form.addEventListener('submit', async (event) => {
       body: JSON.stringify(getPayload())
     });
 
-    const result = await response.json();
+    const result = await readJsonResponse(response);
 
     if (!response.ok) {
       const details = result.issues?.map((issue) => issue.message).join(', ');
@@ -173,3 +218,4 @@ form.addEventListener('submit', async (event) => {
 });
 
 setLoggedIn(Boolean(getToken()));
+loadConfigStatus();
