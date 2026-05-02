@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node --check api/index.js",
     "start": "node backend/src/server.js",
-    "inter:status": "node backend/src/scripts/checkInter.js"
+    "inter:status": "node backend/src/scripts/checkInter.js",
+    "inter:cert": "node backend/src/scripts/prepareInterCert.js"
   },
   "dependencies": {
     "bwip-js": "^4.10.1",

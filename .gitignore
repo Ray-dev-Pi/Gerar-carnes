@@ -2,5 +2,10 @@ node_modules/
 .env
 *.log
 backend/storage/carnes/*.pdf
+certs/
+*.crt
+*.key
+*.pfx
+*.pem
 
 .vercel
