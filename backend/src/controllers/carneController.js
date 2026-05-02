@@ -3,7 +3,8 @@ import {
   createCarne,
   formatCarneResponse,
   getCarneById,
-  listCarnes
+  listCarnes,
+  syncCarneWithBank
 } from '../services/carneService.js';
 import { createCarneSchema } from '../validators/carneValidator.js';
 
@@ -31,6 +32,20 @@ export async function getCarneHandler(req, res, next) {
     const carne = await getCarneById(req.params.carneId);
     if (!carne) return res.status(404).json({ message: 'Carne nao encontrado' });
     return res.json(formatCarneResponse(carne));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function syncCarneHandler(req, res, next) {
+  try {
+    const carne = await syncCarneWithBank(req.params.carneId);
+
+    if (!carne) {
+      return res.status(404).json({ message: 'Carne nao encontrado' });
+    }
+
+    return res.json(carne);
   } catch (error) {
     next(error);
   }

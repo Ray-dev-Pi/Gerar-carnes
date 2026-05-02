@@ -110,6 +110,38 @@ export class InterRealClient {
     };
   }
 
+  async refreshBoleto(boleto) {
+    if (!boleto.codigoSolicitacao) {
+      return boleto;
+    }
+
+    const token = await this.getAccessToken();
+    const detail = await this.getBoletoDetail(token, boleto.codigoSolicitacao);
+
+    return {
+      linhaDigitavel: detail.boleto?.linhaDigitavel || detail.linhaDigitavel || boleto.linhaDigitavel,
+      codigoBarras: detail.boleto?.codigoBarras || detail.codigoBarras || boleto.codigoBarras,
+      pixCopiaECola:
+        detail.pix?.pixCopiaECola || detail.pixCopiaECola || boleto.pixCopiaECola,
+      beneficiaryName:
+        detail.beneficiario?.nome || detail.nomeBeneficiario || boleto.beneficiaryName,
+      beneficiaryDocument:
+        detail.beneficiario?.cpfCnpj ||
+        detail.cnpjCpfBeneficiario ||
+        boleto.beneficiaryDocument,
+      agencyCode:
+        detail.beneficiario?.agenciaCodigoBeneficiario ||
+        detail.agenciaCodigoBeneficiario ||
+        boleto.agencyCode,
+      nossoNumero: detail.boleto?.nossoNumero || detail.nossoNumero || boleto.nossoNumero,
+      status: detail.cobranca?.situacao || detail.situacao || boleto.status,
+      rawResponse: {
+        ...(boleto.rawResponse || {}),
+        lastSync: detail
+      }
+    };
+  }
+
   async testConnection() {
     const token = await this.getAccessToken();
     return {

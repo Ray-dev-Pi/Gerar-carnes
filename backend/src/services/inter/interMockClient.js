@@ -33,4 +33,11 @@ export class InterMockClient {
   async getBoletoPdf(codigoSolicitacao) {
     return Buffer.from(`PDF simulado do boleto ${codigoSolicitacao}`);
   }
+
+  async refreshBoleto(boleto) {
+    return {
+      ...boleto,
+      status: boleto.status || 'generated'
+    };
+  }
 }

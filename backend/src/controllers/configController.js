@@ -14,6 +14,7 @@ export function getConfigStatusHandler(req, res) {
 
   res.json({
     interMode: env.inter.mode,
+    requireInterReal: interConfig.requireReal,
     realInterReady: interConfig.realInterReady,
     missingInterConfig: interConfig.missing,
     hasMongoUri: Boolean(env.mongodbUri),

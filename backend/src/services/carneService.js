@@ -1,12 +1,15 @@
 import { Carne } from '../models/Carne.js';
 import { buildInstallmentSchedule } from './installmentScheduler.js';
 import { createInterClient } from './inter/index.js';
+import { getInterConfigStatus } from './inter/interConfigStatus.js';
 import { upsertCustomerFromCarne } from './customerService.js';
 import { generateCarnePdf } from './pdfService.js';
 import { createCarneId, createIdempotencyHash } from '../utils/ids.js';
 import { env } from '../config/env.js';
 
 export async function createCarne(payload) {
+  ensureRealInterReady();
+
   const idempotencyHash = createIdempotencyHash(payload);
   const existing = await Carne.findOne({ idempotencyHash });
 
@@ -74,10 +77,51 @@ export async function getCarneById(carneId) {
   return Carne.findOne({ carneId });
 }
 
+export async function syncCarneWithBank(carneId) {
+  ensureRealInterReady();
+
+  const carne = await Carne.findOne({ carneId });
+  if (!carne) return null;
+
+  const interClient = createInterClient();
+  const syncedBoletos = [];
+
+  for (const boleto of carne.boletos) {
+    const existingBoleto = boleto.toObject?.() || boleto;
+    const updated = await interClient.refreshBoleto(boleto);
+    syncedBoletos.push({
+      ...existingBoleto,
+      ...updated
+    });
+  }
+
+  carne.boletos = syncedBoletos;
+  const pdf = await generateCarnePdf(carne);
+  carne.pdfPath = pdf.path;
+  carne.pdfBase64 = pdf.base64;
+  await carne.save();
+
+  return formatCarneResponse(carne);
+}
+
 export async function listCarnes({ customerId } = {}) {
   const filter = customerId ? { customerId } : {};
   const carnes = await Carne.find(filter).sort({ createdAt: -1 }).limit(100);
   return carnes.map((carne) => formatCarneResponse(carne));
+}
+
+function ensureRealInterReady() {
+  const interStatus = getInterConfigStatus();
+
+  if (!env.inter.requireReal && interStatus.realInterReady) return;
+  if (!env.inter.requireReal && !interStatus.usesInterApi) return;
+  if (interStatus.realInterReady) return;
+
+  const error = new Error(
+    `Banco Inter real nao esta pronto. Faltam: ${interStatus.missing.join(', ')}.`
+  );
+  error.statusCode = 503;
+  throw error;
 }
 
 export function formatCarneResponse(carne, reused = false) {

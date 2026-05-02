@@ -30,6 +30,7 @@ const carnesList = document.querySelector('#carnesList');
 
 let customers = [];
 let carnes = [];
+let interReadyForProduction = false;
 
 firstDueDate.value = new Date().toISOString().slice(0, 10);
 
@@ -113,6 +114,7 @@ async function loadConfigStatus() {
     }
 
     const isMock = !['real', 'sandbox'].includes(status.interMode);
+    interReadyForProduction = Boolean(status.realInterReady);
     if (status.mongoLooksLocal) {
       configStatus.textContent =
         `MongoDB local configurado (${status.mongodbUriSource}). Na Vercel use MONGODB_URI do MongoDB Atlas. Valor atual: ${status.mongodbUriPreview}`;
@@ -126,7 +128,13 @@ async function loadConfigStatus() {
         ? `Banco Inter ${status.interMode} ativo: ${status.bankName}.`
         : `Banco Inter selecionado, mas faltam: ${(status.missingInterConfig || []).join(', ')}.`;
     configStatus.classList.toggle('warning', isMock || !status.realInterReady);
+    submitButton.disabled = !status.realInterReady;
+    submitButton.title = status.realInterReady
+      ? ''
+      : 'Configure o Banco Inter real antes de gerar carnes em producao.';
   } catch (error) {
+    interReadyForProduction = false;
+    submitButton.disabled = true;
     configStatus.textContent = error.message;
     configStatus.classList.add('warning');
   }
@@ -283,7 +291,10 @@ function renderCarnes() {
       <p class="customer-name">${escapeHtml(carne.carneId)}</p>
       <p class="customer-meta">${escapeHtml(carne.customerName)} - ${formatCurrency(carne.totalAmount)} - ${carne.installments} parcela(s)</p>
       <p class="customer-meta">Status: ${escapeHtml(carne.status)}</p>
-      ${carne.pdfUrl ? `<a href="${withToken(carne.pdfUrl)}" target="_blank" rel="noreferrer">Abrir carne</a>` : ''}
+      <div class="carne-actions">
+        ${carne.pdfUrl ? `<a href="${withToken(carne.pdfUrl)}" target="_blank" rel="noreferrer">Abrir carne</a>` : ''}
+        <button type="button" data-action="sync-carne" data-id="${escapeHtml(carne.carneId)}">Sincronizar Inter</button>
+      </div>
     `;
     carnesList.appendChild(card);
   }
@@ -414,6 +425,35 @@ logoutButton.addEventListener('click', () => {
 refreshCustomersButton.addEventListener('click', loadCustomers);
 refreshCarnesButton.addEventListener('click', loadCarnes);
 
+carnesList.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-action="sync-carne"]');
+  if (!button) return;
+
+  button.disabled = true;
+  button.textContent = 'Sincronizando...';
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/carnes/${button.dataset.id}/sync`, {
+      method: 'POST',
+      headers: authHeaders()
+    });
+    const result = await readJsonResponse(response);
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Nao foi possivel sincronizar com o Inter');
+    }
+
+    renderBoletos(result);
+    await loadCarnes();
+    setMessage('Dados atualizados a partir do Banco Inter.');
+  } catch (error) {
+    setMessage(friendlyNetworkError(error), 'error');
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Sincronizar Inter';
+  }
+});
+
 customerSelect.addEventListener('change', () => {
   const selected = customers.find((customer) => customer.id === customerSelect.value);
   fillCustomerForm(selected || null);
@@ -490,6 +530,11 @@ saveCustomerButton.addEventListener('click', async () => {
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (!interReadyForProduction) {
+    setMessage('Configure e valide o Banco Inter real antes de gerar carnes.', 'error');
+    return;
+  }
+
   submitButton.disabled = true;
   submitButton.textContent = 'Gerando...';
   pdfLink.classList.add('hidden');

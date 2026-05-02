@@ -41,6 +41,9 @@ export const env = {
   },
   inter: {
     mode: interMode,
+    requireReal:
+      process.env.REQUIRE_INTER_REAL === 'true' ||
+      (process.env.NODE_ENV === 'production' && process.env.INTER_MODE !== 'sandbox'),
     baseUrl:
       process.env.INTER_BASE_URL ||
       (interMode === 'sandbox'

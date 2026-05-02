@@ -24,6 +24,7 @@ export function getInterConfigStatus() {
 
   return {
     usesInterApi,
+    requireReal: env.inter.requireReal,
     realInterReady: usesInterApi && missing.length === 0,
     missing,
     hasCertificatePair,

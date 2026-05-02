@@ -365,6 +365,20 @@ button:disabled {
   font-weight: 700;
 }
 
+.carne-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.carne-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  background: #eef2f5;
+  color: #344052;
+}
+
 .customer-card.active {
   border-color: #00856f;
   box-shadow: 0 0 0 3px rgba(0, 133, 111, 0.1);
