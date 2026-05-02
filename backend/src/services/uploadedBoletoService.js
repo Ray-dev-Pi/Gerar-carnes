@@ -1,6 +1,7 @@
-import { PDFParse } from 'pdf-parse';
 import { generateCarnePdfBuffer } from './pdfService.js';
 import { createCarneId } from '../utils/ids.js';
+
+let PDFParseClass;
 
 const bankNames = {
   '001': 'Banco do Brasil',
@@ -67,6 +68,7 @@ export async function convertUploadedBoletoToCarne({ fileBuffer, fields }) {
 }
 
 async function extractPdfText(fileBuffer) {
+  const PDFParse = await loadPdfParser();
   const parser = new PDFParse({ data: fileBuffer });
   try {
     const result = await parser.getText();
@@ -74,6 +76,24 @@ async function extractPdfText(fileBuffer) {
   } finally {
     await parser.destroy();
   }
+}
+
+async function loadPdfParser() {
+  if (PDFParseClass) return PDFParseClass;
+
+  await installPdfJsDomPolyfills();
+  const { PDFParse } = await import('pdf-parse');
+  PDFParseClass = PDFParse;
+  return PDFParseClass;
+}
+
+async function installPdfJsDomPolyfills() {
+  if (globalThis.DOMMatrix && globalThis.DOMPoint && globalThis.DOMRect) return;
+
+  const { DOMMatrix, DOMPoint, DOMRect } = await import('@napi-rs/canvas');
+  globalThis.DOMMatrix ||= DOMMatrix;
+  globalThis.DOMPoint ||= DOMPoint;
+  globalThis.DOMRect ||= DOMRect;
 }
 
 function normalizeLinhaDigitavel(value) {
