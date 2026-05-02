@@ -2,6 +2,7 @@ import { generateCarnePdfBuffer } from './pdfService.js';
 import { createCarneId } from '../utils/ids.js';
 
 let PDFParseClass;
+let pdfJsWorkerReady;
 
 const bankNames = {
   '001': 'Banco do Brasil',
@@ -82,9 +83,15 @@ async function loadPdfParser() {
   if (PDFParseClass) return PDFParseClass;
 
   await installPdfJsDomPolyfills();
+  await installPdfJsWorker();
   const { PDFParse } = await import('pdf-parse');
   PDFParseClass = PDFParse;
   return PDFParseClass;
+}
+
+async function installPdfJsWorker() {
+  pdfJsWorkerReady ||= import('pdfjs-dist/legacy/build/pdf.worker.mjs');
+  await pdfJsWorkerReady;
 }
 
 async function installPdfJsDomPolyfills() {
