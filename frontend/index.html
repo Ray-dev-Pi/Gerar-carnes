@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerador de Carnes</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel form-panel">
+        <div>
+          <p class="eyebrow">Banco Inter Empresas</p>
+          <h1>Gerador de carnes</h1>
+          <p class="subtitle">Crie boletos parcelados com vencimentos mensais automaticos.</p>
+        </div>
+
+        <form id="carneForm" class="form">
+          <label>
+            Nome do cliente
+            <input id="customerName" name="customerName" type="text" placeholder="Maria Silva" required />
+          </label>
+
+          <label>
+            CPF/CNPJ
+            <input id="document" name="document" type="text" placeholder="Somente numeros" required />
+          </label>
+
+          <div class="grid">
+            <label>
+              Valor total
+              <input id="totalAmount" name="totalAmount" type="number" step="0.01" min="0.01" placeholder="1200,00" required />
+            </label>
+
+            <label>
+              Parcelas
+              <input id="installments" name="installments" type="number" min="1" max="60" value="6" required />
+            </label>
+          </div>
+
+          <label>
+            Data inicial
+            <input id="firstDueDate" name="firstDueDate" type="date" required />
+          </label>
+
+          <button id="submitButton" type="submit">Gerar Carne</button>
+        </form>
+      </section>
+
+      <section class="panel result-panel">
+        <div class="result-header">
+          <div>
+            <p class="eyebrow">Resultado</p>
+            <h2 id="resultTitle">Nenhum carne gerado</h2>
+          </div>
+          <a id="pdfLink" class="pdf-link hidden" href="#" target="_blank" rel="noreferrer">Baixar PDF</a>
+        </div>
+
+        <div id="message" class="message">Preencha o formulario para visualizar os boletos.</div>
+        <div id="boletos" class="boletos"></div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
