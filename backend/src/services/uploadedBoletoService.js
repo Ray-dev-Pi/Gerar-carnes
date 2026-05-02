@@ -16,9 +16,11 @@ const bankNames = {
 export async function convertUploadedBoletoToCarne({ fileBuffer, fields }) {
   const text = await extractPdfText(fileBuffer);
   const linhaDigitavel = normalizeLinhaDigitavel(fields.linhaDigitavel) || findLinhaDigitavel(text);
-  const codigoBarras = fields.codigoBarras?.replace(/\D/g, '') || linhaDigitavelToBarcode(linhaDigitavel);
+  const codigoBarras =
+    String(fields.codigoBarras || '').replace(/\D/g, '') || linhaDigitavelToBarcode(linhaDigitavel);
   const amount = parseAmount(fields.amount) || findAmount(text, linhaDigitavel);
-  const dueDate = normalizeDate(fields.dueDate) || findDueDate(text) || new Date().toISOString().slice(0, 10);
+  const dueDate =
+    normalizeDate(fields.dueDate) || findDueDate(text) || new Date().toISOString().slice(0, 10);
   const bankCode = (codigoBarras || linhaDigitavel || '').slice(0, 3);
   const carneId = createCarneId();
 
@@ -47,12 +49,13 @@ export async function convertUploadedBoletoToCarne({ fileBuffer, fields }) {
         seuNumero: fields.documentNumber || findDocumentNumber(text) || carneId.split('-').at(-1),
         linhaDigitavel,
         codigoBarras,
-        bankName: fields.bankName || bankNames[bankCode] || 'Banco',
-        bankCode: bankCode ? `${bankCode}` : '',
+        bankName: fields.bankName || bankNames[bankCode] || 'Banco Inter',
+        bankCode: bankCode || '077',
         beneficiaryName: fields.beneficiaryName || findBeneficiary(text) || 'Beneficiario',
         beneficiaryDocument: fields.beneficiaryDocument || '',
         agencyCode: fields.agencyCode || '',
-        nossoNumero: fields.nossoNumero || ''
+        nossoNumero: fields.nossoNumero || '',
+        pixCopiaECola: fields.pixCopiaECola || findPixCopiaECola(text)
       }
     ]
   };
@@ -80,8 +83,7 @@ function normalizeLinhaDigitavel(value) {
 }
 
 function findLinhaDigitavel(text) {
-  const compact = text.replace(/[^\d]/g, ' ');
-  const candidates = compact.match(/\d(?:[\s. -]*\d){46,47}/g) || [];
+  const candidates = text.match(/\d(?:[\s. -]*\d){46,47}/g) || [];
 
   for (const candidate of candidates) {
     const digits = candidate.replace(/\D/g, '');
@@ -137,7 +139,9 @@ function findDueDate(text) {
 }
 
 function findDocument(text) {
-  const match = text.match(/\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/);
+  const match = text.match(
+    /\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/
+  );
   return match ? match[0].replace(/\D/g, '') : '';
 }
 
@@ -154,4 +158,9 @@ function findBeneficiary(text) {
 function findDocumentNumber(text) {
   const match = text.match(/N[uú]mero Documento\s*:?\s*([A-Z0-9.-]+)/i);
   return match?.[1]?.trim() || '';
+}
+
+function findPixCopiaECola(text) {
+  const match = text.match(/000201[0-9A-Z./:+-]{40,}/i);
+  return match?.[0]?.trim() || '';
 }
