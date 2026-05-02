@@ -90,6 +90,13 @@ async function loadConfigStatus() {
     }
 
     const isMock = status.interMode !== 'real';
+    if (status.mongoLooksLocal) {
+      configStatus.textContent =
+        'MongoDB local configurado. Na Vercel use MONGODB_URI do MongoDB Atlas.';
+      configStatus.classList.add('warning');
+      return;
+    }
+
     configStatus.textContent = isMock
       ? 'Modo simulacao ativo: nao registra boletos reais no Banco Inter.'
       : status.realInterReady

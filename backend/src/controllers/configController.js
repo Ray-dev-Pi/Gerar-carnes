@@ -10,6 +10,7 @@ export function getConfigStatusHandler(req, res) {
           (env.inter.certPath && env.inter.keyPath))
     ),
     hasMongoUri: Boolean(env.mongodbUri),
+    mongoLooksLocal: env.mongodbUri.includes('127.0.0.1') || env.mongodbUri.includes('localhost'),
     bankName: env.boleto.bankName,
     beneficiaryName: env.boleto.beneficiaryName
   });
