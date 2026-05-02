@@ -1,5 +1,6 @@
 import { generateCarnePdfBuffer } from './pdfService.js';
 import { createCarneId } from '../utils/ids.js';
+import { env } from '../config/env.js';
 
 let PDFParseClass;
 let pdfJsWorkerReady;
@@ -25,6 +26,18 @@ export async function convertUploadedBoletoToCarne({ fileBuffer, fields }) {
     normalizeDate(fields.dueDate) || findDueDate(text) || new Date().toISOString().slice(0, 10);
   const bankCode = (codigoBarras || linhaDigitavel || '').slice(0, 3);
   const carneId = createCarneId();
+  const beneficiaryName = fields.beneficiaryName || findBeneficiary(text) || 'Beneficiario';
+  const pixCopiaECola =
+    fields.pixCopiaECola ||
+    fields.pixCopiaEColaManual ||
+    findPixCopiaECola(text) ||
+    createPixCopiaECola({
+      pixKey: fields.pixKey || env.boleto.pixKey,
+      amount,
+      beneficiaryName,
+      city: fields.pixCity || env.boleto.pixCity,
+      txid: fields.pixTxid || carneId.split('-').at(-1)
+    });
 
   if (!linhaDigitavel && !codigoBarras) {
     const error = new Error(
@@ -53,11 +66,11 @@ export async function convertUploadedBoletoToCarne({ fileBuffer, fields }) {
         codigoBarras,
         bankName: fields.bankName || bankNames[bankCode] || 'Banco Inter',
         bankCode: bankCode ? `${bankCode}-9` : '077-9',
-        beneficiaryName: fields.beneficiaryName || findBeneficiary(text) || 'Beneficiario',
+        beneficiaryName,
         beneficiaryDocument: fields.beneficiaryDocument || findBeneficiaryDocument(text) || '',
         agencyCode: fields.agencyCode || findAgencyCode(text) || '',
         nossoNumero: fields.nossoNumero || findNossoNumero(text) || '',
-        pixCopiaECola: fields.pixCopiaECola || findPixCopiaECola(text)
+        pixCopiaECola
       }
     ]
   };
@@ -227,4 +240,52 @@ function findDocumentNumber(text) {
 function findPixCopiaECola(text) {
   const match = text.match(/000201[0-9A-Z./:+-]{40,}/i);
   return match?.[0]?.trim() || '';
+}
+
+function createPixCopiaECola({ pixKey, amount, beneficiaryName, city, txid }) {
+  const key = String(pixKey || '').trim();
+  if (!key) return '';
+
+  const merchantAccountInfo = emv('00', 'br.gov.bcb.pix') + emv('01', key);
+  const payload =
+    emv('00', '01') +
+    emv('26', merchantAccountInfo) +
+    emv('52', '0000') +
+    emv('53', '986') +
+    (amount > 0 ? emv('54', amount.toFixed(2)) : '') +
+    emv('58', 'BR') +
+    emv('59', normalizePixText(beneficiaryName, 25) || 'BENEFICIARIO') +
+    emv('60', normalizePixText(city, 15) || 'FORTALEZA') +
+    emv('62', emv('05', normalizePixText(txid, 25) || '***'));
+
+  return `${payload}6304${crc16Ccitt(`${payload}6304`)}`;
+}
+
+function emv(id, value) {
+  const text = String(value || '');
+  return `${id}${String(text.length).padStart(2, '0')}${text}`;
+}
+
+function normalizePixText(value, maxLength) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Z0-9 $%*+\-./:]/gi, '')
+    .trim()
+    .toUpperCase()
+    .slice(0, maxLength);
+}
+
+function crc16Ccitt(value) {
+  let crc = 0xffff;
+
+  for (let index = 0; index < value.length; index += 1) {
+    crc ^= value.charCodeAt(index) << 8;
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1;
+      crc &= 0xffff;
+    }
+  }
+
+  return crc.toString(16).toUpperCase().padStart(4, '0');
 }

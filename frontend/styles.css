@@ -106,6 +106,16 @@ textarea:focus {
   background: #f8fafb;
 }
 
+.pix-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #b7d8d1;
+  border-radius: 8px;
+  background: #f3fbf9;
+}
+
 .grid,
 .details-grid {
   display: grid;
@@ -227,7 +237,8 @@ button:disabled {
 @media (max-width: 900px) {
   .shell,
   .grid,
-  .details-grid {
+  .details-grid,
+  .pix-panel {
     grid-template-columns: 1fr;
   }
 

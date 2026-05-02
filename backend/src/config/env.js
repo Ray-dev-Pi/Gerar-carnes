@@ -37,7 +37,9 @@ export const env = {
     beneficiaryDocument: process.env.BOLETO_BENEFICIARY_DOCUMENT || '',
     agencyCode: process.env.BOLETO_AGENCY_CODE || '',
     bankCode: process.env.BOLETO_BANK_CODE || '077-9',
-    bankName: process.env.BOLETO_BANK_NAME || 'Banco Inter'
+    bankName: process.env.BOLETO_BANK_NAME || 'Banco Inter',
+    pixKey: process.env.BOLETO_PIX_KEY || '',
+    pixCity: process.env.BOLETO_PIX_CITY || 'FORTALEZA'
   },
   inter: {
     mode: interMode,
