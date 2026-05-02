@@ -92,7 +92,7 @@ async function loadConfigStatus() {
     const isMock = status.interMode !== 'real';
     if (status.mongoLooksLocal) {
       configStatus.textContent =
-        'MongoDB local configurado. Na Vercel use MONGODB_URI do MongoDB Atlas.';
+        `MongoDB local configurado (${status.mongodbUriSource}). Na Vercel use MONGODB_URI do MongoDB Atlas. Valor atual: ${status.mongodbUriPreview}`;
       configStatus.classList.add('warning');
       return;
     }

@@ -2,6 +2,12 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const mongodbUri =
+  process.env.MONGODB_URI ||
+  process.env.MONGO_URI ||
+  process.env.DATABASE_URL ||
+  'mongodb://127.0.0.1:27017/gerar-carnes';
+
 export const env = {
   port: Number(process.env.PORT || 3000),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -11,7 +17,14 @@ export const env = {
       ? `https://${process.env.VERCEL_URL}`
       : `http://localhost:${process.env.PORT || 3000}`),
   frontendOrigin: process.env.FRONTEND_ORIGIN || '*',
-  mongodbUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/gerar-carnes',
+  mongodbUri,
+  mongodbUriSource: process.env.MONGODB_URI
+    ? 'MONGODB_URI'
+    : process.env.MONGO_URI
+      ? 'MONGO_URI'
+      : process.env.DATABASE_URL
+        ? 'DATABASE_URL'
+        : 'default-local',
   mongodbDbName: process.env.MONGODB_DB_NAME || 'gerar-carnes',
   auth: {
     username: process.env.APP_USERNAME || 'admin',
