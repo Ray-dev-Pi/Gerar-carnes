@@ -129,6 +129,10 @@ summary {
   margin-top: 14px;
 }
 
+.wide {
+  grid-column: 1 / -1;
+}
+
 button,
 .pdf-link {
   min-height: 46px;

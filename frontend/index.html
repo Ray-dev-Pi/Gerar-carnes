@@ -23,38 +23,34 @@
             <input id="boletoFile" name="boleto" type="file" accept="application/pdf" required />
           </label>
 
-          <div class="grid">
-            <label>
-              Linha digitável
-              <input name="linhaDigitavel" type="text" placeholder="Opcional se o PDF tiver texto legível" />
-            </label>
-
-            <label>
-              Valor
-              <input name="amount" type="text" placeholder="Ex: 150,00" />
-            </label>
-          </div>
-
-          <div class="grid">
-            <label>
-              Vencimento
-              <input name="dueDate" type="date" />
-            </label>
-
-            <label>
-              Banco
-              <input name="bankName" type="text" value="Banco Inter" />
-            </label>
-          </div>
-
-          <label>
-            Pix copia e cola
-            <textarea name="pixCopiaECola" rows="4" placeholder="Opcional. Cole aqui se quiser gerar QR Code Pix no carnê."></textarea>
-          </label>
-
           <details>
-            <summary>Campos opcionais do pagador e beneficiário</summary>
+            <summary>Correção manual, só se o PDF estiver ilegível</summary>
             <div class="details-grid">
+              <label>
+                Linha digitável
+                <input name="linhaDigitavel" type="text" placeholder="Use apenas se a leitura automática falhar" />
+              </label>
+
+              <label>
+                Valor
+                <input name="amount" type="text" placeholder="Ex: 150,00" />
+              </label>
+
+              <label>
+                Vencimento
+                <input name="dueDate" type="date" />
+              </label>
+
+              <label>
+                Banco
+                <input name="bankName" type="text" placeholder="Banco Inter" />
+              </label>
+
+              <label class="wide">
+                Pix copia e cola
+                <textarea name="pixCopiaECola" rows="4" placeholder="Cole aqui apenas se quiser gerar QR Code Pix e ele não tiver sido lido do PDF."></textarea>
+              </label>
+
               <label>
                 Pagador
                 <input name="customerName" type="text" placeholder="Nome do pagador" />
@@ -85,7 +81,7 @@
         <p class="eyebrow">Resultado</p>
         <h2 id="resultTitle">Aguardando boleto</h2>
         <div id="message" class="message">
-          O conversor tenta ler os dados do PDF automaticamente. Se algum campo sair em branco, preencha a linha digitável, valor, vencimento ou Pix manualmente.
+          Envie o boleto PDF do Inter. O conversor lê automaticamente linha digitável, valor, vencimento, pagador, beneficiário e dados da ficha.
         </div>
         <a id="pdfLink" class="pdf-link hidden" href="#" target="_blank" rel="noreferrer">Abrir carnê convertido</a>
         <div class="sample">

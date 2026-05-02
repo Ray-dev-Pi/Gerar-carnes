@@ -32,7 +32,7 @@ converterForm.addEventListener('submit', async (event) => {
   convertButton.disabled = true;
   convertButton.textContent = 'Convertendo...';
   pdfLink.classList.add('hidden');
-  setMessage('Lendo o boleto e montando o carnê...');
+  setMessage('Lendo os dados do boleto Inter e montando o carnê...');
 
   try {
     const data = new FormData(converterForm);
