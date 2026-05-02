@@ -102,6 +102,7 @@ Variaveis obrigatorias em Production/Preview:
 
 ```env
 MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/gerar-carnes
+MONGODB_DB_NAME=gerar-carnes
 INTER_MODE=mock
 APP_URL=https://seu-projeto.vercel.app
 APP_USERNAME=admin

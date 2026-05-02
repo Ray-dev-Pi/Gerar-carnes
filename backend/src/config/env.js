@@ -12,6 +12,7 @@ export const env = {
       : `http://localhost:${process.env.PORT || 3000}`),
   frontendOrigin: process.env.FRONTEND_ORIGIN || '*',
   mongodbUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/gerar-carnes',
+  mongodbDbName: process.env.MONGODB_DB_NAME || 'gerar-carnes',
   auth: {
     username: process.env.APP_USERNAME || 'admin',
     password: process.env.APP_PASSWORD || 'admin123',

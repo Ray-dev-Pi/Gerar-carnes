@@ -12,8 +12,15 @@ export async function connectDatabase() {
     );
   }
 
+  if (env.mongodbUri.includes('<db_password>')) {
+    throw new Error(
+      'Substitua <db_password> pela senha real do usuario do MongoDB Atlas na variavel MONGODB_URI.'
+    );
+  }
+
   mongoose.set('strictQuery', true);
   await mongoose.connect(env.mongodbUri, {
+    dbName: env.mongodbDbName,
     serverSelectionTimeoutMS: 8000
   });
   console.log(`MongoDB conectado em ${env.mongodbUri}`);
