@@ -3,10 +3,7 @@
   "outputDirectory": "frontend",
   "functions": {
     "api/converter/boleto.js": {
-      "includeFiles": [
-        "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
-        "backend/assets/informatica.png"
-      ]
+      "includeFiles": "{node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs,backend/assets/informatica.png}"
     }
   },
   "rewrites": [
