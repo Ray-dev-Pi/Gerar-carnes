@@ -7,11 +7,35 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <section id="loginView" class="login-view">
+      <form id="loginForm" class="panel login-card">
+        <p class="eyebrow">Acesso restrito</p>
+        <h1>Entrar</h1>
+        <p class="subtitle">Autentique-se para usar a conta e gerar carnes.</p>
+
+        <label>
+          Usuario
+          <input id="username" name="username" type="text" autocomplete="username" required />
+        </label>
+
+        <label>
+          Senha
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </label>
+
+        <button id="loginButton" type="submit">Entrar</button>
+        <div id="loginMessage" class="message hidden"></div>
+      </form>
+    </section>
+
     <main class="shell">
       <section class="panel form-panel">
         <div>
           <p class="eyebrow">Banco Inter Empresas</p>
-          <h1>Gerador de carnes</h1>
+          <div class="title-row">
+            <h1>Gerador de carnes</h1>
+            <button id="logoutButton" class="ghost-button" type="button">Sair</button>
+          </div>
           <p class="subtitle">Crie boletos parcelados com vencimentos mensais automaticos.</p>
         </div>
 

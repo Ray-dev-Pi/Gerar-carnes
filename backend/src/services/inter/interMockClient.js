@@ -15,6 +15,12 @@ export class InterMockClient {
       codigoBarras: randomDigits(44),
       bankPdfUrl: `${env.appUrl}/api/inter/boletos/${codigoSolicitacao}/pdf`,
       pixCopiaECola: `00020101021226880014br.gov.bcb.pix2566mock.inter/${codigoSolicitacao}520400005303986540${installment.amount.toFixed(2)}5802BR5913${payer.name.slice(0, 13)}6009SAO PAULO62070503***6304ABCD`,
+      bankName: env.boleto.bankName,
+      bankCode: env.boleto.bankCode,
+      beneficiaryName: env.boleto.beneficiaryName,
+      beneficiaryDocument: env.boleto.beneficiaryDocument,
+      agencyCode: env.boleto.agencyCode,
+      nossoNumero: randomDigits(12),
       status: 'generated',
       rawResponse: {
         mock: true,

@@ -11,6 +11,12 @@ const boletoSchema = new mongoose.Schema(
     codigoBarras: { type: String },
     bankPdfUrl: { type: String },
     pixCopiaECola: { type: String },
+    bankName: { type: String },
+    bankCode: { type: String },
+    beneficiaryName: { type: String },
+    beneficiaryDocument: { type: String },
+    agencyCode: { type: String },
+    nossoNumero: { type: String },
     status: { type: String, default: 'generated' },
     rawResponse: { type: mongoose.Schema.Types.Mixed }
   },

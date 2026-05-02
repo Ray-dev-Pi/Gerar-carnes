@@ -12,6 +12,18 @@ export const env = {
       : `http://localhost:${process.env.PORT || 3000}`),
   frontendOrigin: process.env.FRONTEND_ORIGIN || '*',
   mongodbUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/gerar-carnes',
+  auth: {
+    username: process.env.APP_USERNAME || 'admin',
+    password: process.env.APP_PASSWORD || 'admin123',
+    tokenSecret: process.env.APP_TOKEN_SECRET || 'troque-este-segredo-em-producao'
+  },
+  boleto: {
+    beneficiaryName: process.env.BOLETO_BENEFICIARY_NAME || 'Sua empresa',
+    beneficiaryDocument: process.env.BOLETO_BENEFICIARY_DOCUMENT || '',
+    agencyCode: process.env.BOLETO_AGENCY_CODE || '',
+    bankCode: process.env.BOLETO_BANK_CODE || '077-9',
+    bankName: process.env.BOLETO_BANK_NAME || 'Banco Inter'
+  },
   inter: {
     mode: process.env.INTER_MODE || 'mock',
     baseUrl: process.env.INTER_BASE_URL || 'https://cdpj.partners.bancointer.com.br',

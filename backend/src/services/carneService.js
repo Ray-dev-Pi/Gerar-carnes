@@ -83,6 +83,12 @@ export function formatCarneResponse(carne, reused = false) {
       codigoBarras: boleto.codigoBarras,
       bankPdfUrl: boleto.bankPdfUrl,
       pixCopiaECola: boleto.pixCopiaECola,
+      bankName: boleto.bankName,
+      bankCode: boleto.bankCode,
+      beneficiaryName: boleto.beneficiaryName,
+      beneficiaryDocument: boleto.beneficiaryDocument,
+      agencyCode: boleto.agencyCode,
+      nossoNumero: boleto.nossoNumero,
       status: boleto.status
     }))
   };

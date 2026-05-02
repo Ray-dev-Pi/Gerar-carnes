@@ -104,6 +104,12 @@ Variaveis obrigatorias em Production/Preview:
 MONGODB_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/gerar-carnes
 INTER_MODE=mock
 APP_URL=https://seu-projeto.vercel.app
+APP_USERNAME=admin
+APP_PASSWORD=uma-senha-forte
+APP_TOKEN_SECRET=um-segredo-longo-aleatorio
+BOLETO_BENEFICIARY_NAME=Nome da sua empresa
+BOLETO_BENEFICIARY_DOCUMENT=00000000000100
+BOLETO_AGENCY_CODE=0001/00000000-0
 ```
 
 Para usar Banco Inter real na Vercel:

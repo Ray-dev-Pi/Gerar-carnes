@@ -87,6 +87,19 @@ export class InterRealClient {
         : undefined,
       pixCopiaECola:
         detail.pix?.pixCopiaECola || detail.pixCopiaECola || created.pixCopiaECola,
+      bankName: env.boleto.bankName,
+      bankCode: env.boleto.bankCode,
+      beneficiaryName:
+        detail.beneficiario?.nome || detail.nomeBeneficiario || env.boleto.beneficiaryName,
+      beneficiaryDocument:
+        detail.beneficiario?.cpfCnpj ||
+        detail.cnpjCpfBeneficiario ||
+        env.boleto.beneficiaryDocument,
+      agencyCode:
+        detail.beneficiario?.agenciaCodigoBeneficiario ||
+        detail.agenciaCodigoBeneficiario ||
+        env.boleto.agencyCode,
+      nossoNumero: detail.nossoNumero || created.nossoNumero,
       status: 'generated',
       rawResponse: { created, detail }
     };

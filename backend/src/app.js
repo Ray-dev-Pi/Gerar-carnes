@@ -2,9 +2,11 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
+import { authRoutes } from './routes/authRoutes.js';
 import { carneRoutes } from './routes/carneRoutes.js';
 import { interRoutes } from './routes/interRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+import { requireAuth } from './middlewares/authMiddleware.js';
 
 export const app = express();
 
@@ -20,6 +22,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', mode: env.inter.mode });
 });
 
-app.use('/api/carnes', carneRoutes);
-app.use('/api/inter', interRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/carnes', requireAuth, carneRoutes);
+app.use('/api/inter', requireAuth, interRoutes);
 app.use(errorHandler);

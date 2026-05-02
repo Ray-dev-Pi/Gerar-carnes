@@ -13,6 +13,30 @@ body {
   margin: 0;
 }
 
+body.locked {
+  overflow: hidden;
+}
+
+.login-view {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #eef2f5;
+}
+
+.login-card {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 16px;
+}
+
+.login-card .subtitle {
+  margin-bottom: 6px;
+}
+
 .shell {
   width: min(1120px, calc(100% - 32px));
   margin: 32px auto;
@@ -53,6 +77,13 @@ h1 {
 
 h2 {
   font-size: 1.25rem;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .subtitle {
@@ -110,6 +141,12 @@ button,
   font-weight: 750;
   text-decoration: none;
   cursor: pointer;
+}
+
+.ghost-button {
+  min-height: 36px;
+  background: #eef2f5;
+  color: #344052;
 }
 
 button:disabled {
