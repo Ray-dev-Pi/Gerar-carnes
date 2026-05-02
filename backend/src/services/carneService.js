@@ -1,6 +1,7 @@
 import { Carne } from '../models/Carne.js';
 import { buildInstallmentSchedule } from './installmentScheduler.js';
 import { createInterClient } from './inter/index.js';
+import { upsertCustomerFromCarne } from './customerService.js';
 import { generateCarnePdf } from './pdfService.js';
 import { createCarneId, createIdempotencyHash } from '../utils/ids.js';
 import { env } from '../config/env.js';
@@ -25,6 +26,9 @@ export async function createCarne(payload) {
   });
 
   try {
+    const customer = await upsertCustomerFromCarne(payload);
+    carne.customerId = customer._id;
+
     const interClient = createInterClient();
     const payer = {
       name: payload.customerName,
@@ -70,9 +74,16 @@ export async function getCarneById(carneId) {
   return Carne.findOne({ carneId });
 }
 
+export async function listCarnes({ customerId } = {}) {
+  const filter = customerId ? { customerId } : {};
+  const carnes = await Carne.find(filter).sort({ createdAt: -1 }).limit(100);
+  return carnes.map((carne) => formatCarneResponse(carne));
+}
+
 export function formatCarneResponse(carne, reused = false) {
   return {
     carneId: carne.carneId,
+    customerId: carne.customerId?.toString?.() || carne.customerId || null,
     reused,
     status: carne.status,
     customerName: carne.customerName,

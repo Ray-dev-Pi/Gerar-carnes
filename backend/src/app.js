@@ -5,6 +5,7 @@ import { env } from './config/env.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { carneRoutes } from './routes/carneRoutes.js';
 import { configRoutes } from './routes/configRoutes.js';
+import { customerRoutes } from './routes/customerRoutes.js';
 import { interRoutes } from './routes/interRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { requireAuth } from './middlewares/authMiddleware.js';
@@ -25,6 +26,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/config', requireAuth, configRoutes);
+app.use('/api/customers', requireAuth, customerRoutes);
 app.use('/api/carnes', requireAuth, carneRoutes);
 app.use('/api/inter', requireAuth, interRoutes);
 app.use(errorHandler);

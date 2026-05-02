@@ -38,10 +38,10 @@ body.locked {
 }
 
 .shell {
-  width: min(1120px, calc(100% - 32px));
+  width: min(1280px, calc(100% - 32px));
   margin: 32px auto;
   display: grid;
-  grid-template-columns: 0.85fr 1.15fr;
+  grid-template-columns: 0.85fr 0.75fr 1.1fr;
   gap: 20px;
 }
 
@@ -130,7 +130,23 @@ input {
   background: #ffffff;
 }
 
+select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #ccd5df;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font: inherit;
+  color: #18202a;
+  background: #ffffff;
+}
+
 input:focus {
+  border-color: #00856f;
+  outline: 3px solid rgba(0, 133, 111, 0.16);
+}
+
+select:focus {
   border-color: #00856f;
   outline: 3px solid rgba(0, 133, 111, 0.16);
 }
@@ -167,6 +183,23 @@ button,
   color: #344052;
 }
 
+.secondary-button {
+  background: #263647;
+}
+
+.customer-picker {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.form-actions {
+  display: grid;
+  grid-template-columns: 0.85fr 1fr;
+  gap: 10px;
+}
+
 button:disabled {
   cursor: wait;
   opacity: 0.7;
@@ -192,10 +225,26 @@ button:disabled {
   color: #9d2323;
 }
 
+.message.compact {
+  margin-top: 14px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+}
+
 .boletos {
   margin-top: 18px;
   display: grid;
   gap: 12px;
+}
+
+.history-header {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #dfe5eb;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .boleto {
@@ -261,6 +310,73 @@ button:disabled {
   font-weight: 700;
 }
 
+.customers-list {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.carnes-list {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.customer-card {
+  border: 1px solid #dfe5eb;
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.carne-card {
+  border: 1px solid #dfe5eb;
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.carne-card a {
+  color: #006b5f;
+  font-weight: 700;
+}
+
+.customer-card.active {
+  border-color: #00856f;
+  box-shadow: 0 0 0 3px rgba(0, 133, 111, 0.1);
+}
+
+.customer-name {
+  margin: 0;
+  font-weight: 800;
+}
+
+.customer-meta {
+  margin: 0;
+  color: #5b6673;
+  font-size: 0.88rem;
+}
+
+.customer-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.customer-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  background: #eef2f5;
+  color: #344052;
+}
+
+.customer-actions .danger-button {
+  background: #fff0f0;
+  color: #9d2323;
+}
+
 .hidden {
   display: none;
 }
@@ -272,6 +388,11 @@ button:disabled {
   }
 
   .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-picker,
+  .form-actions {
     grid-template-columns: 1fr;
   }
 }

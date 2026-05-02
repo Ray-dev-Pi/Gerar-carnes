@@ -10,7 +10,9 @@ export default async function handler(req, res) {
     }
 
     const needsDatabase =
-      req.url?.startsWith('/api/carnes') || req.url?.startsWith('/api/inter');
+      req.url?.startsWith('/api/carnes') ||
+      req.url?.startsWith('/api/customers') ||
+      req.url?.startsWith('/api/inter');
 
     if (needsDatabase) {
       databasePromise ||= connectDatabase();

@@ -1,5 +1,10 @@
 import fs from 'fs';
-import { createCarne, formatCarneResponse, getCarneById } from '../services/carneService.js';
+import {
+  createCarne,
+  formatCarneResponse,
+  getCarneById,
+  listCarnes
+} from '../services/carneService.js';
 import { createCarneSchema } from '../validators/carneValidator.js';
 
 export async function createCarneHandler(req, res, next) {
@@ -7,6 +12,15 @@ export async function createCarneHandler(req, res, next) {
     const payload = createCarneSchema.parse(req.body);
     const result = await createCarne(payload);
     res.status(result.reused ? 200 : 201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function listCarnesHandler(req, res, next) {
+  try {
+    const carnes = await listCarnes({ customerId: req.query.customerId || '' });
+    res.json({ carnes });
   } catch (error) {
     next(error);
   }

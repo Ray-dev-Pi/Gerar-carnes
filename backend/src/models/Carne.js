@@ -27,6 +27,7 @@ const carneSchema = new mongoose.Schema(
   {
     carneId: { type: String, unique: true, required: true, index: true },
     idempotencyHash: { type: String, unique: true, required: true, index: true },
+    customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
     customerName: { type: String, required: true },
     email: { type: String },
     phone: { type: String },

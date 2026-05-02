@@ -1,5 +1,8 @@
 const API_BASE_URL =
-  window.location.protocol === 'file:' ? 'http://localhost:3000/api' : '/api';
+  window.location.protocol === 'file:' ||
+  ['127.0.0.1', 'localhost'].includes(window.location.hostname)
+    ? 'http://localhost:3000/api'
+    : '/api';
 
 const form = document.querySelector('#carneForm');
 const loginView = document.querySelector('#loginView');
@@ -8,12 +11,24 @@ const loginButton = document.querySelector('#loginButton');
 const loginMessage = document.querySelector('#loginMessage');
 const logoutButton = document.querySelector('#logoutButton');
 const submitButton = document.querySelector('#submitButton');
+const saveCustomerButton = document.querySelector('#saveCustomerButton');
+const clearCustomerButton = document.querySelector('#clearCustomerButton');
+const refreshCustomersButton = document.querySelector('#refreshCustomersButton');
+const refreshCarnesButton = document.querySelector('#refreshCarnesButton');
 const message = document.querySelector('#message');
 const boletosEl = document.querySelector('#boletos');
 const resultTitle = document.querySelector('#resultTitle');
 const pdfLink = document.querySelector('#pdfLink');
 const firstDueDate = document.querySelector('#firstDueDate');
 const configStatus = document.querySelector('#configStatus');
+const customerSelect = document.querySelector('#customerSelect');
+const customerId = document.querySelector('#customerId');
+const customersMessage = document.querySelector('#customersMessage');
+const customersList = document.querySelector('#customersList');
+const carnesList = document.querySelector('#carnesList');
+
+let customers = [];
+let carnes = [];
 
 firstDueDate.value = new Date().toISOString().slice(0, 10);
 
@@ -76,6 +91,11 @@ function setMessage(text, type = 'info') {
   message.classList.toggle('error', type === 'error');
 }
 
+function setCustomersMessage(text, type = 'info') {
+  customersMessage.textContent = text;
+  customersMessage.classList.toggle('error', type === 'error');
+}
+
 async function loadConfigStatus() {
   if (!getToken()) return;
 
@@ -129,6 +149,7 @@ function getPayload() {
   const data = new FormData(form);
 
   return {
+    customerId: data.get('customerId') || undefined,
     customerName: data.get('customerName'),
     email: data.get('email'),
     phone: data.get('phone'),
@@ -146,12 +167,152 @@ function getPayload() {
   };
 }
 
+function getCustomerPayload() {
+  const payload = getPayload();
+
+  return {
+    name: payload.customerName,
+    email: payload.email,
+    phone: payload.phone,
+    document: payload.document,
+    address: payload.address,
+    addressNumber: payload.addressNumber,
+    complement: payload.complement,
+    neighborhood: payload.neighborhood,
+    city: payload.city,
+    state: payload.state,
+    zipCode: payload.zipCode
+  };
+}
+
+function fillCustomerForm(customer) {
+  customerId.value = customer?.id || '';
+  form.customerName.value = customer?.name || '';
+  form.document.value = customer?.document || '';
+  form.email.value = customer?.email || '';
+  form.phone.value = customer?.phone || '';
+  form.address.value = customer?.address || '';
+  form.addressNumber.value = customer?.addressNumber || '';
+  form.complement.value = customer?.complement || '';
+  form.neighborhood.value = customer?.neighborhood || '';
+  form.city.value = customer?.city || '';
+  form.state.value = customer?.state || '';
+  form.zipCode.value = customer?.zipCode || '';
+  customerSelect.value = customer?.id || '';
+  renderCustomers();
+}
+
+function renderCustomerOptions() {
+  const currentValue = customerSelect.value;
+  customerSelect.innerHTML = '<option value="">Novo cliente</option>';
+
+  for (const customer of customers) {
+    const option = document.createElement('option');
+    option.value = customer.id;
+    option.textContent = `${customer.name} - ${customer.document}`;
+    customerSelect.appendChild(option);
+  }
+
+  customerSelect.value = customers.some((customer) => customer.id === currentValue)
+    ? currentValue
+    : customerId.value;
+}
+
+function renderCustomers() {
+  customersList.innerHTML = '';
+  renderCustomerOptions();
+
+  if (!customers.length) {
+    setCustomersMessage('Nenhum cliente cadastrado ainda.');
+    return;
+  }
+
+  setCustomersMessage(`${customers.length} cliente(s) no cadastro.`);
+
+  for (const customer of customers) {
+    const card = document.createElement('article');
+    card.className = `customer-card${customer.id === customerId.value ? ' active' : ''}`;
+    card.innerHTML = `
+      <p class="customer-name">${escapeHtml(customer.name)}</p>
+      <p class="customer-meta">${escapeHtml(customer.document)} · ${escapeHtml(customer.city)}/${escapeHtml(customer.state)}</p>
+      <p class="customer-meta">${escapeHtml(customer.email || customer.phone || 'Sem contato informado')}</p>
+      <div class="customer-actions">
+        <button type="button" data-action="select" data-id="${customer.id}">Usar</button>
+        <button type="button" class="danger-button" data-action="delete" data-id="${customer.id}">Excluir</button>
+      </div>
+    `;
+    customersList.appendChild(card);
+  }
+}
+
+async function loadCustomers() {
+  if (!getToken()) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/customers`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    const result = await readJsonResponse(response);
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Nao foi possivel carregar clientes');
+    }
+
+    customers = result.customers || [];
+    renderCustomers();
+  } catch (error) {
+    setCustomersMessage(friendlyNetworkError(error), 'error');
+  }
+}
+
+function renderCarnes() {
+  carnesList.innerHTML = '';
+
+  if (!carnes.length) {
+    carnesList.innerHTML = '<div class="message compact">Nenhum carne gerado ainda.</div>';
+    return;
+  }
+
+  for (const carne of carnes) {
+    const card = document.createElement('article');
+    card.className = 'carne-card';
+    card.innerHTML = `
+      <p class="customer-name">${escapeHtml(carne.carneId)}</p>
+      <p class="customer-meta">${escapeHtml(carne.customerName)} · ${formatCurrency(carne.totalAmount)} · ${carne.installments} parcela(s)</p>
+      <p class="customer-meta">Status: ${escapeHtml(carne.status)}</p>
+      ${carne.pdfUrl ? `<a href="${withToken(carne.pdfUrl)}" target="_blank" rel="noreferrer">Abrir carnê</a>` : ''}
+    `;
+    carnesList.appendChild(card);
+  }
+}
+
+async function loadCarnes() {
+  if (!getToken()) return;
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/carnes`, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+    const result = await readJsonResponse(response);
+
+    if (!response.ok) {
+      throw new Error(result.message || 'Nao foi possivel carregar carnes');
+    }
+
+    carnes = result.carnes || [];
+    renderCarnes();
+  } catch (error) {
+    carnesList.innerHTML = `<div class="message compact error">${escapeHtml(friendlyNetworkError(error))}</div>`;
+  }
+}
+
 function renderBoletos(result) {
   resultTitle.textContent = `Carne ${result.carneId}`;
   boletosEl.innerHTML = '';
 
   if (result.pdfUrl) {
     pdfLink.href = withToken(result.pdfUrl);
+    pdfLink.textContent = 'Baixar carnê';
     pdfLink.classList.remove('hidden');
   }
 
@@ -178,7 +339,7 @@ function renderBoletos(result) {
           : ''
       }
       <div class="actions">
-        ${boleto.bankPdfUrl ? `<a href="${withToken(boleto.bankPdfUrl)}" target="_blank" rel="noreferrer">Visualizar boleto</a>` : ''}
+        ${boleto.bankPdfUrl ? `<a href="${withToken(boleto.bankPdfUrl)}" target="_blank" rel="noreferrer">${boleto.codigoSolicitacao?.startsWith('MOCK-') ? 'PDF simulado' : 'PDF oficial Inter'}</a>` : ''}
       </div>
     `;
     boletosEl.appendChild(item);
@@ -226,6 +387,8 @@ loginForm.addEventListener('submit', async (event) => {
     setToken(result.token);
     setLoggedIn(true);
     loadConfigStatus();
+    loadCustomers();
+    loadCarnes();
   } catch (error) {
     loginMessage.textContent = friendlyNetworkError(error);
     loginMessage.classList.remove('hidden');
@@ -239,6 +402,87 @@ loginForm.addEventListener('submit', async (event) => {
 logoutButton.addEventListener('click', () => {
   clearToken();
   setLoggedIn(false);
+  customers = [];
+  carnes = [];
+  renderCustomers();
+  renderCarnes();
+});
+
+refreshCustomersButton.addEventListener('click', loadCustomers);
+refreshCarnesButton.addEventListener('click', loadCarnes);
+
+customerSelect.addEventListener('change', () => {
+  const selected = customers.find((customer) => customer.id === customerSelect.value);
+  fillCustomerForm(selected || null);
+});
+
+clearCustomerButton.addEventListener('click', () => {
+  fillCustomerForm(null);
+});
+
+customersList.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+
+  const selected = customers.find((customer) => customer.id === button.dataset.id);
+  if (!selected) return;
+
+  if (button.dataset.action === 'select') {
+    fillCustomerForm(selected);
+    return;
+  }
+
+  if (button.dataset.action === 'delete') {
+    const response = await fetch(`${API_BASE_URL}/customers/${selected.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+
+    if (!response.ok) {
+      const result = await readJsonResponse(response);
+      setCustomersMessage(result.message || 'Nao foi possivel excluir cliente', 'error');
+      return;
+    }
+
+    if (customerId.value === selected.id) {
+      fillCustomerForm(null);
+    }
+
+    await loadCustomers();
+  }
+});
+
+saveCustomerButton.addEventListener('click', async () => {
+  saveCustomerButton.disabled = true;
+  saveCustomerButton.textContent = 'Salvando...';
+
+  try {
+    const payload = getCustomerPayload();
+    const editingId = customerId.value;
+    const response = await fetch(
+      editingId ? `${API_BASE_URL}/customers/${editingId}` : `${API_BASE_URL}/customers`,
+      {
+        method: editingId ? 'PATCH' : 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(payload)
+      }
+    );
+    const result = await readJsonResponse(response);
+
+    if (!response.ok) {
+      const details = result.issues?.map((issue) => issue.message).join(', ');
+      throw new Error(details || result.message || 'Falha ao salvar cliente');
+    }
+
+    await loadCustomers();
+    fillCustomerForm(result);
+    setCustomersMessage('Cliente salvo.');
+  } catch (error) {
+    setCustomersMessage(friendlyNetworkError(error), 'error');
+  } finally {
+    saveCustomerButton.disabled = false;
+    saveCustomerButton.textContent = 'Salvar cliente';
+  }
 });
 
 form.addEventListener('submit', async (event) => {
@@ -265,6 +509,8 @@ form.addEventListener('submit', async (event) => {
 
     setMessage(result.reused ? 'Carne ja existia; exibindo registro existente.' : 'Carne gerado com sucesso.');
     renderBoletos(result);
+    loadCustomers();
+    loadCarnes();
   } catch (error) {
     setMessage(friendlyNetworkError(error), 'error');
     resultTitle.textContent = 'Falha ao gerar carne';
@@ -276,3 +522,5 @@ form.addEventListener('submit', async (event) => {
 
 setLoggedIn(Boolean(getToken()));
 loadConfigStatus();
+loadCustomers();
+loadCarnes();
