@@ -15,12 +15,26 @@ const storageDir = process.env.VERCEL
 const logoPath = path.resolve(__dirname, '../../assets/informatica.png');
 const carnePageSize = [980, 410];
 const boletosPerPage = 4;
-const groupedCarnePageSize = [carnePageSize[0], carnePageSize[1] * boletosPerPage];
+const a4PageSize = [595.28, 841.89];
 
 async function renderCarnePdf(doc, carne) {
+  const pageMargin = 12;
+  const slotHeight = (a4PageSize[1] - pageMargin * 2) / boletosPerPage;
+  const scale = Math.min((a4PageSize[0] - pageMargin * 2) / carnePageSize[0], slotHeight / carnePageSize[1]);
+  const scaledWidth = carnePageSize[0] * scale;
+  const xOffset = pageMargin + (a4PageSize[0] - pageMargin * 2 - scaledWidth) / 2;
+
   for (const [index, boleto] of carne.boletos.entries()) {
     if (index > 0 && index % boletosPerPage === 0) doc.addPage();
-    await renderBoletoPage(doc, carne, boleto, (index % boletosPerPage) * carnePageSize[1]);
+
+    const slotIndex = index % boletosPerPage;
+    const yOffset = pageMargin + slotIndex * slotHeight;
+
+    doc.save();
+    doc.translate(xOffset, yOffset);
+    doc.scale(scale);
+    await renderBoletoPage(doc, carne, boleto);
+    doc.restore();
   }
 }
 
@@ -211,7 +225,7 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
 }
 
 export async function generateCarnePdfBuffer(carne) {
-  const doc = new PDFDocument({ margin: 18, size: groupedCarnePageSize });
+  const doc = new PDFDocument({ margin: 0, size: a4PageSize });
   const chunks = [];
 
   doc.on('data', (chunk) => chunks.push(chunk));
@@ -230,7 +244,7 @@ export async function generateCarnePdf(carne) {
   await fs.promises.mkdir(storageDir, { recursive: true });
   const pdfPath = path.join(storageDir, `${carne.carneId}.pdf`);
 
-  const doc = new PDFDocument({ margin: 18, size: groupedCarnePageSize });
+  const doc = new PDFDocument({ margin: 0, size: a4PageSize });
   const stream = fs.createWriteStream(pdfPath);
   doc.pipe(stream);
 
