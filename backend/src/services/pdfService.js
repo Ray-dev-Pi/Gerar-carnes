@@ -20,8 +20,9 @@ const a4PageSize = [595.28, 841.89];
 async function renderCarnePdf(doc, carne) {
   const pageMargin = 12;
   const slotHeight = (a4PageSize[1] - pageMargin * 2) / boletosPerPage;
-  const scale = Math.min((a4PageSize[0] - pageMargin * 2) / carnePageSize[0], slotHeight / carnePageSize[1]);
-  const scaledWidth = carnePageSize[0] * scale;
+  const scaleX = (a4PageSize[0] - pageMargin * 2) / carnePageSize[0];
+  const scaleY = slotHeight / carnePageSize[1];
+  const scaledWidth = carnePageSize[0] * scaleX;
   const xOffset = pageMargin + (a4PageSize[0] - pageMargin * 2 - scaledWidth) / 2;
 
   for (const [index, boleto] of carne.boletos.entries()) {
@@ -32,8 +33,8 @@ async function renderCarnePdf(doc, carne) {
 
     doc.save();
     doc.translate(xOffset, yOffset);
-    doc.scale(scale);
-    await renderBoletoPage(doc, carne, boleto);
+    doc.scale(scaleX, scaleY);
+    await renderBoletoPage(doc, carne, boleto, 0, { scaleX, scaleY });
     doc.restore();
   }
 }
@@ -105,7 +106,7 @@ async function drawBarcode(doc, value, x, y, options = {}) {
   doc.image(png, x, y, { width, height });
 }
 
-async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
+async function renderBoletoPage(doc, carne, boleto, yOffset = 0, renderScale = { scaleX: 1, scaleY: 1 }) {
   const left = 18;
   const top = yOffset + 18;
   const pageW = carnePageSize[0];
@@ -201,11 +202,15 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
 
   if (pixCode) {
     const qrSize = 104;
-    pixPaymentBox(doc, pixCode, mainX, rowY + 218, mainW - qrSize - 18, 38);
+    const qrDrawWidth = qrSize * (renderScale.scaleY / renderScale.scaleX);
+    pixPaymentBox(doc, pixCode, mainX, rowY + 218, mainW - qrDrawWidth - 18, 38);
     const qr = await QRCode.toDataURL(pixCode, { margin: 1, width: 180 });
-    doc.image(qr, mainX + mainW - qrSize - 8, rowY + 214, { width: qrSize });
-    doc.fontSize(7).fillColor('#111111').text('QR Code PIX', mainX + mainW - qrSize - 2, rowY + 318, {
-      width: qrSize,
+    doc.image(qr, mainX + mainW - qrDrawWidth - 8, rowY + 214, {
+      width: qrDrawWidth,
+      height: qrSize
+    });
+    doc.fontSize(7).fillColor('#111111').text('QR Code PIX', mainX + mainW - qrDrawWidth - 2, rowY + 318, {
+      width: qrDrawWidth,
       align: 'center'
     });
   }
