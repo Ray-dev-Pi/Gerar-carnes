@@ -201,7 +201,7 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
 
   if (pixCode) {
     const qrSize = 104;
-    pixPaymentBox(doc, pixCode, mainX, rowY + 218, mainW - qrSize - 18, 52);
+    pixPaymentBox(doc, pixCode, mainX, rowY + 218, mainW - qrSize - 18, 38);
     const qr = await QRCode.toDataURL(pixCode, { margin: 1, width: 180 });
     doc.image(qr, mainX + mainW - qrSize - 8, rowY + 214, { width: qrSize });
     doc.fontSize(7).fillColor('#111111').text('QR Code PIX', mainX + mainW - qrSize - 2, rowY + 318, {
@@ -210,7 +210,7 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
     });
   }
 
-  await drawBarcode(doc, boleto.codigoBarras, mainX + 14, rowY + 276, { width: 560, height: 58 });
+  await drawBarcode(doc, boleto.codigoBarras, mainX + 14, rowY + 252, { width: 560, height: 58 });
   doc
     .fontSize(6.5)
     .fillColor('#111111')
