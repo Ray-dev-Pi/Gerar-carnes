@@ -195,7 +195,9 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
     mainW - 150,
     34
   );
-  field(doc, 'CPF/CNPJ', payerDocument, mainX + mainW - 150, rowY + 204, 150, 26);
+  if (!pixCode) {
+    field(doc, 'CPF/CNPJ', payerDocument, mainX + mainW - 150, rowY + 204, 150, 26);
+  }
 
   if (pixCode) {
     const qrSize = 104;
@@ -208,7 +210,7 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
     });
   }
 
-  await drawBarcode(doc, boleto.codigoBarras, mainX + 14, rowY + 258, { width: 560, height: 58 });
+  await drawBarcode(doc, boleto.codigoBarras, mainX + 14, rowY + 276, { width: 560, height: 58 });
   doc
     .fontSize(6.5)
     .fillColor('#111111')
