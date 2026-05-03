@@ -14,11 +14,13 @@ const storageDir = process.env.VERCEL
   : path.resolve(__dirname, '../../storage/carnes');
 const logoPath = path.resolve(__dirname, '../../assets/informatica.png');
 const carnePageSize = [980, 410];
+const boletosPerPage = 4;
+const groupedCarnePageSize = [carnePageSize[0], carnePageSize[1] * boletosPerPage];
 
 async function renderCarnePdf(doc, carne) {
   for (const [index, boleto] of carne.boletos.entries()) {
-    if (index > 0) doc.addPage();
-    await renderBoletoPage(doc, carne, boleto);
+    if (index > 0 && index % boletosPerPage === 0) doc.addPage();
+    await renderBoletoPage(doc, carne, boleto, (index % boletosPerPage) * carnePageSize[1]);
   }
 }
 
@@ -89,11 +91,12 @@ async function drawBarcode(doc, value, x, y, options = {}) {
   doc.image(png, x, y, { width, height });
 }
 
-async function renderBoletoPage(doc, carne, boleto) {
+async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
   const left = 18;
-  const top = 18;
+  const top = yOffset + 18;
   const pageW = doc.page.width;
-  const pageH = doc.page.height;
+  const pageH = carnePageSize[1];
+  const bottomY = yOffset + pageH;
   const receiptW = 178;
   const mainX = left + receiptW + 12;
   const mainW = pageW - mainX - 18;
@@ -197,18 +200,18 @@ async function renderBoletoPage(doc, carne, boleto) {
     });
 
   doc
-    .moveTo(left, pageH - 26)
-    .lineTo(pageW - 18, pageH - 26)
+    .moveTo(left, bottomY - 26)
+    .lineTo(pageW - 18, bottomY - 26)
     .dash(3, { space: 3 })
     .stroke('#c9c9c9')
     .undash();
-  doc.fontSize(7).fillColor('#777777').text('Corte na linha pontilhada', left, pageH - 22, {
+  doc.fontSize(7).fillColor('#777777').text('Corte na linha pontilhada', left, bottomY - 22, {
     lineBreak: false
   });
 }
 
 export async function generateCarnePdfBuffer(carne) {
-  const doc = new PDFDocument({ margin: 18, size: carnePageSize });
+  const doc = new PDFDocument({ margin: 18, size: groupedCarnePageSize });
   const chunks = [];
 
   doc.on('data', (chunk) => chunks.push(chunk));
@@ -227,7 +230,7 @@ export async function generateCarnePdf(carne) {
   await fs.promises.mkdir(storageDir, { recursive: true });
   const pdfPath = path.join(storageDir, `${carne.carneId}.pdf`);
 
-  const doc = new PDFDocument({ margin: 18, size: carnePageSize });
+  const doc = new PDFDocument({ margin: 18, size: groupedCarnePageSize });
   const stream = fs.createWriteStream(pdfPath);
   doc.pipe(stream);
 
