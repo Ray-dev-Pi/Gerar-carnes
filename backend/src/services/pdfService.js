@@ -125,7 +125,7 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
   const payerDocument = boleto.document || carne.document;
 
   doc.rect(left, top, receiptW, pageH - 48).stroke('#8a8a8a');
-  drawLogo(doc, left + 8, top + 7, 42);
+  drawLogo(doc, left + 10, top + 8, 34);
   doc.fontSize(7).fillColor('#111111').text('Recibo do Pagador', left + 62, top + 20);
 
   const receiptY = top + 50;
@@ -145,8 +145,8 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
   pixPaymentBox(doc, pixCode, left, receiptY + 250, receiptW, 44);
 
   doc.rect(mainX, top, mainW, pageH - 48).stroke('#8a8a8a');
-  drawLogo(doc, mainX + 8, top + 5, 42);
-  doc.fontSize(15).fillColor('#f15a24').text(bankName, mainX + 58, top + 10, { width: 98 });
+  drawLogo(doc, mainX + 10, top + 8, 34);
+  doc.fontSize(15).fillColor('#f15a24').text(bankName, mainX + 58, top + 13, { width: 98 });
   doc.fontSize(10).fillColor('#111111').text(bankCode, mainX + 158, top + 14, { width: 45 });
   doc
     .moveTo(mainX + 205, top + 8)
@@ -198,18 +198,22 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0) {
   field(doc, 'CPF/CNPJ', payerDocument, mainX + mainW - 150, rowY + 204, 150, 26);
 
   if (pixCode) {
-    pixPaymentBox(doc, pixCode, mainX, rowY + 222, mainW - 96, 40);
-    const qr = await QRCode.toDataURL(pixCode, { margin: 1, width: 104 });
-    doc.image(qr, mainX + mainW - 84, rowY + 222, { width: 72 });
-    doc.fontSize(6.5).fillColor('#111111').text('QR Code PIX', mainX + mainW - 78, rowY + 295);
+    const qrSize = 104;
+    pixPaymentBox(doc, pixCode, mainX, rowY + 218, mainW - qrSize - 18, 52);
+    const qr = await QRCode.toDataURL(pixCode, { margin: 1, width: 180 });
+    doc.image(qr, mainX + mainW - qrSize - 8, rowY + 214, { width: qrSize });
+    doc.fontSize(7).fillColor('#111111').text('QR Code PIX', mainX + mainW - qrSize - 2, rowY + 318, {
+      width: qrSize,
+      align: 'center'
+    });
   }
 
-  await drawBarcode(doc, boleto.codigoBarras, mainX + 14, rowY + 272, { width: 390, height: 44 });
+  await drawBarcode(doc, boleto.codigoBarras, mainX + 14, rowY + 258, { width: 560, height: 58 });
   doc
     .fontSize(6.5)
     .fillColor('#111111')
-    .text('Autenticacao Mecanica / FICHA DE COMPENSACAO', mainX + mainW - 190, rowY + 318, {
-      width: 180,
+    .text('Autenticacao Mecanica / FICHA DE COMPENSACAO', mainX + 14, bottomY - 34, {
+      width: 560,
       align: 'right'
     });
 
