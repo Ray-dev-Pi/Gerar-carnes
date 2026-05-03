@@ -15,22 +15,28 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { fileBuffer, fields } = await readMultipart(req);
+    const { fileBuffers, fields } = await readMultipart(req);
 
-    if (!fileBuffer) {
-      sendJson(res, 400, { message: 'Envie um boleto em PDF no campo boleto' });
+    if (!fileBuffers.length) {
+      sendJson(res, 400, { message: 'Envie pelo menos um boleto em PDF no campo boleto' });
       return;
     }
 
-    const { convertUploadedBoletoToCarne } = await import(
+    const { convertUploadedBoletosToCarnePdfs } = await import(
       '../../backend/src/services/uploadedBoletoService.js'
     );
-    const { carne, pdf } = await convertUploadedBoletoToCarne({ fileBuffer, fields });
+    const { files } = await convertUploadedBoletosToCarnePdfs({ fileBuffers, fields });
 
     res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="${carne.carneId}.pdf"`);
-    res.end(pdf);
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.end(
+      JSON.stringify({
+        files: files.map((file) => ({
+          filename: file.filename,
+          pdfBase64: file.pdf.toString('base64')
+        }))
+      })
+    );
   } catch (error) {
     console.error('Erro no conversor de boleto:', error);
     sendJson(res, error.statusCode || 500, {
@@ -42,12 +48,12 @@ export default async function handler(req, res) {
 function readMultipart(req) {
   return new Promise((resolve, reject) => {
     const fields = {};
-    let fileBuffer = null;
+    const fileBuffers = [];
 
     const busboy = Busboy({
       headers: req.headers,
       limits: {
-        files: 1,
+        files: 12,
         fileSize: 8 * 1024 * 1024
       }
     });
@@ -72,12 +78,13 @@ function readMultipart(req) {
       file.on('data', (chunk) => chunks.push(chunk));
       file.on('limit', () => reject(new Error('PDF muito grande. Envie arquivo de ate 8MB.')));
       file.on('end', () => {
-        fileBuffer = Buffer.concat(chunks);
+        fileBuffers.push(Buffer.concat(chunks));
       });
     });
 
+    busboy.on('filesLimit', () => reject(new Error('Envie no maximo 12 arquivos PDF.')));
     busboy.on('error', reject);
-    busboy.on('finish', () => resolve({ fileBuffer, fields }));
+    busboy.on('finish', () => resolve({ fileBuffers, fields }));
     req.pipe(busboy);
   });
 }

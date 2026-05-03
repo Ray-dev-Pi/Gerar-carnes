@@ -68,6 +68,8 @@ export async function convertUploadedBoletoToCarne({ fileBuffer, fields }) {
         codigoBarras,
         bankName: fields.bankName || bankNames[bankCode] || 'Banco Inter',
         bankCode: bankCode ? `${bankCode}-9` : '077-9',
+        customerName: fields.customerName || findPayerName(text) || 'Pagador nao identificado',
+        document: fields.document || findPayerDocument(text) || findDocument(text) || '',
         beneficiaryName,
         beneficiaryDocument: fields.beneficiaryDocument || findBeneficiaryDocument(text) || '',
         agencyCode: fields.agencyCode || findAgencyCode(text) || '',
@@ -81,6 +83,48 @@ export async function convertUploadedBoletoToCarne({ fileBuffer, fields }) {
     carne,
     pdf: await generateCarnePdfBuffer(carne)
   };
+}
+
+export async function convertUploadedBoletosToCarnePdfs({ fileBuffers, fields }) {
+  const limitedBuffers = fileBuffers.slice(0, 12);
+  const converted = [];
+
+  for (const fileBuffer of limitedBuffers) {
+    converted.push(await convertUploadedBoletoToCarne({ fileBuffer, fields }));
+  }
+
+  const files = [];
+  for (let index = 0; index < converted.length; index += 4) {
+    const group = converted.slice(index, index + 4);
+    const boletos = group.flatMap((item) => item.carne.boletos);
+    const firstCarne = group[0].carne;
+    const carneId = createCarneId();
+    const start = index + 1;
+    const end = index + boletos.length;
+    const groupedCarne = {
+      ...firstCarne,
+      carneId,
+      customerName: firstCarne.customerName,
+      document: firstCarne.document,
+      installments: boletos.length,
+      totalAmount: boletos.reduce((total, boleto) => total + (Number(boleto.amount) || 0), 0),
+      firstDueDate: boletos[0]?.dueDate || firstCarne.firstDueDate,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      boletos: boletos.map((boleto, boletoIndex) => ({
+        ...boleto,
+        installmentNumber: boletoIndex + 1
+      }))
+    };
+
+    files.push({
+      filename: `carnes-${start}-${end}-${carneId}.pdf`,
+      carne: groupedCarne,
+      pdf: await generateCarnePdfBuffer(groupedCarne)
+    });
+  }
+
+  return { files };
 }
 
 async function extractPdfText(fileBuffer) {

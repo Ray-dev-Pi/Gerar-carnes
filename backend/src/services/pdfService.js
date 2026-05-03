@@ -104,6 +104,8 @@ async function renderBoletoPage(doc, carne, boleto) {
   const agencyCode = boleto.agencyCode || env.boleto.agencyCode;
   const linhaDigitavel = boleto.linhaDigitavel || 'Linha digitavel retornada pelo Banco Inter';
   const pixCode = boleto.pixCopiaECola || '';
+  const payerName = boleto.customerName || carne.customerName;
+  const payerDocument = boleto.document || carne.document;
 
   doc.rect(left, top, receiptW, pageH - 48).stroke('#8a8a8a');
   drawLogo(doc, left + 8, top + 7, 42);
@@ -121,7 +123,7 @@ async function renderBoletoPage(doc, carne, boleto) {
   field(doc, '(-) Desconto / Abatimento', '', left, receiptY + 112, receiptW, 22);
   field(doc, '(+) Mora / Multa', '', left, receiptY + 134, receiptW, 22);
   field(doc, '(=) Valor Cobrado', '', left, receiptY + 156, receiptW, 22);
-  field(doc, 'Pagador', `${carne.customerName}\n${carne.document}`, left, receiptY + 182, receiptW, 34);
+  field(doc, 'Pagador', `${payerName}\n${payerDocument}`, left, receiptY + 182, receiptW, 34);
   field(doc, 'Beneficiario', `${beneficiaryName}\n${beneficiaryDocument}`, left, receiptY + 216, receiptW, 34);
   pixPaymentBox(doc, pixCode, left, receiptY + 250, receiptW, 44);
 
@@ -170,13 +172,13 @@ async function renderBoletoPage(doc, carne, boleto) {
   field(
     doc,
     'Pagador',
-    `${carne.customerName}\nCPF/CNPJ: ${carne.document}`,
+    `${payerName}\nCPF/CNPJ: ${payerDocument}`,
     mainX,
     rowY + 184,
     mainW - 150,
     34
   );
-  field(doc, 'CPF/CNPJ', carne.document, mainX + mainW - 150, rowY + 204, 150, 26);
+  field(doc, 'CPF/CNPJ', payerDocument, mainX + mainW - 150, rowY + 204, 150, 26);
 
   if (pixCode) {
     pixPaymentBox(doc, pixCode, mainX, rowY + 222, mainW - 96, 40);

@@ -177,6 +177,16 @@ button:disabled {
   margin-top: 16px;
 }
 
+.pdf-links {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.pdf-links .pdf-link {
+  margin-top: 0;
+}
+
 .hidden {
   display: none;
 }

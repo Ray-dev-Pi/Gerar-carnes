@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Conversor de Boleto Inter para Carnê</title>
+    <title>Conversor de Boleto Inter para Carnes</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -11,24 +11,24 @@
       <section class="panel converter">
         <div class="intro">
           <p class="eyebrow">Boleto/Pix Banco Inter</p>
-          <h1>Conversor para carnê</h1>
+          <h1>Conversor para carnes</h1>
           <p class="subtitle">
-            Envie o PDF do boleto do Inter e receba uma ficha em formato de carnê, com recibo do pagador, ficha de compensação, código de barras e QR Code Pix quando informado.
+            Envie ate 12 PDFs de boletos do Inter e receba downloads organizados com ate 4 carnes por PDF.
           </p>
         </div>
 
         <form id="converterForm" class="form">
           <label class="file-drop">
-            <span>PDF do boleto Inter</span>
-            <input id="boletoFile" name="boleto" type="file" accept="application/pdf" required />
+            <span>PDFs dos boletos Inter</span>
+            <input id="boletoFile" name="boleto" type="file" accept="application/pdf" multiple required />
           </label>
 
           <details>
-            <summary>Correção manual, só se o PDF estiver ilegível</summary>
+            <summary>Correcao manual, so se o PDF estiver ilegivel</summary>
             <div class="details-grid">
               <label>
-                Linha digitável
-                <input name="linhaDigitavel" type="text" placeholder="Use apenas se a leitura automática falhar" />
+                Linha digitavel
+                <input name="linhaDigitavel" type="text" placeholder="Use apenas se a leitura automatica falhar" />
               </label>
 
               <label>
@@ -58,32 +58,32 @@
 
               <label>
                 CPF/CNPJ do pagador
-                <input name="document" type="text" placeholder="Somente números" />
+                <input name="document" type="text" placeholder="Somente numeros" />
               </label>
 
               <label>
-                Beneficiário
+                Beneficiario
                 <input name="beneficiaryName" type="text" placeholder="Nome da empresa" />
               </label>
 
               <label>
-                CPF/CNPJ do beneficiário
-                <input name="beneficiaryDocument" type="text" placeholder="Somente números" />
+                CPF/CNPJ do beneficiario
+                <input name="beneficiaryDocument" type="text" placeholder="Somente numeros" />
               </label>
             </div>
           </details>
 
-          <button id="convertButton" type="submit">Converter para carnê</button>
+          <button id="convertButton" type="submit">Converter para carnes</button>
         </form>
       </section>
 
       <section class="panel preview">
         <p class="eyebrow">Resultado</p>
-        <h2 id="resultTitle">Aguardando boleto</h2>
+        <h2 id="resultTitle">Aguardando boletos</h2>
         <div id="message" class="message">
-          Envie o boleto PDF do Inter. O conversor lê automaticamente linha digitável, valor, vencimento, pagador, beneficiário e dados da ficha.
+          Envie ate 12 boletos PDF do Inter. O conversor le automaticamente linha digitavel, valor, vencimento, pagador, beneficiario e dados da ficha.
         </div>
-        <a id="pdfLink" class="pdf-link hidden" href="#" target="_blank" rel="noreferrer">Abrir carnê convertido</a>
+        <div id="pdfLinks" class="pdf-links hidden"></div>
         <div class="sample">
           <div class="stub"></div>
           <div class="slip"></div>
