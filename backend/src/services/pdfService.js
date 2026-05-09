@@ -13,12 +13,12 @@ const storageDir = process.env.VERCEL
   ? '/tmp/gerar-carnes'
   : path.resolve(__dirname, '../../storage/carnes');
 const logoPath = path.resolve(__dirname, '../../assets/informatica.png');
-const carnePageSize = [980, 410];
+const carnePageSize = [960, 400];
 const boletosPerPage = 4;
 const a4PageSize = [595.28, 841.89];
 
 async function renderCarnePdf(doc, carne) {
-  const pageMargin = 8;
+  const pageMargin = 4;
   const slotHeight = (a4PageSize[1] - pageMargin * 2) / boletosPerPage;
   const scaleX = (a4PageSize[0] - pageMargin * 2) / carnePageSize[0];
   const scaleY = slotHeight / carnePageSize[1];
@@ -236,7 +236,7 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0, renderScale = {
   await drawBarcode(doc, boleto.codigoBarras, barcodeX, rowY + 246, {
     width: barcodeWidth,
     height: 58,
-    textFontSize: 10.5
+    textFontSize: 12.5
   });
   doc
     .fontSize(8)
