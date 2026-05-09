@@ -14,8 +14,8 @@ const storageDir = process.env.VERCEL
   : path.resolve(__dirname, '../../storage/carnes');
 const logoPath = path.resolve(__dirname, '../../assets/informatica.png');
 const carnePageSize = [980, 410];
-const boletosPerPage = 4;
-const a4PageSize = [595.28, 841.89];
+const boletosPerPage = 2;
+const a4PageSize = [841.89, 595.28];
 
 async function renderCarnePdf(doc, carne) {
   const pageMargin = 12;
@@ -84,10 +84,11 @@ async function drawBarcode(doc, value, x, y, options = {}) {
   const digits = String(value || '').replace(/\D/g, '');
   const width = options.width || 360;
   const height = options.height || 56;
+  const textFontSize = options.textFontSize || 10;
 
   if (digits.length !== 44) {
     doc
-      .fontSize(6.5)
+      .fontSize(textFontSize)
       .fillColor('#111111')
       .text('Codigo de barras indisponivel', x, y + 18, { width, align: 'center' });
     return;
@@ -104,6 +105,16 @@ async function drawBarcode(doc, value, x, y, options = {}) {
   });
 
   doc.image(png, x, y, { width, height });
+  doc
+    .font('Courier')
+    .fontSize(textFontSize)
+    .fillColor('#111111')
+    .text(digits, x, y + height + 5, {
+      width,
+      align: 'center',
+      characterSpacing: 0.25
+    })
+    .font('Helvetica');
 }
 
 async function renderBoletoPage(doc, carne, boleto, yOffset = 0, renderScale = { scaleX: 1, scaleY: 1 }) {
@@ -215,12 +226,16 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0, renderScale = {
     });
   }
 
-  await drawBarcode(doc, boleto.codigoBarras, mainX + 14, rowY + 252, { width: 560, height: 58 });
+  await drawBarcode(doc, boleto.codigoBarras, mainX + 10, rowY + 230, {
+    width: 650,
+    height: 66,
+    textFontSize: 10.5
+  });
   doc
-    .fontSize(6.5)
+    .fontSize(8)
     .fillColor('#111111')
-    .text('Autenticacao Mecanica / FICHA DE COMPENSACAO', mainX + 14, bottomY - 34, {
-      width: 560,
+    .text('Autenticacao Mecanica / FICHA DE COMPENSACAO', mainX + 10, bottomY - 18, {
+      width: 650,
       align: 'right'
     });
 
