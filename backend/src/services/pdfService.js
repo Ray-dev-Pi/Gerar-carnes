@@ -211,31 +211,38 @@ async function renderBoletoPage(doc, carne, boleto, yOffset = 0, renderScale = {
     field(doc, 'CPF/CNPJ', payerDocument, mainX + mainW - 150, rowY + 204, 150, 26);
   }
 
+  let qrDrawWidth = 0;
+  let qrX = mainX + mainW;
+
   if (pixCode) {
-    const qrSize = 104;
-    const qrDrawWidth = qrSize * (renderScale.scaleY / renderScale.scaleX);
-    pixPaymentBox(doc, pixCode, mainX, rowY + 218, mainW - qrDrawWidth - 18, 38);
+    const qrSize = 98;
+    qrDrawWidth = qrSize * (renderScale.scaleY / renderScale.scaleX);
+    qrX = mainX + mainW - qrDrawWidth - 8;
+    pixPaymentBox(doc, pixCode, mainX, rowY + 218, qrX - mainX - 12, 26);
     const qr = await QRCode.toDataURL(pixCode, { margin: 1, width: 180 });
-    doc.image(qr, mainX + mainW - qrDrawWidth - 8, rowY + 214, {
+    doc.image(qr, qrX, rowY + 212, {
       width: qrDrawWidth,
       height: qrSize
     });
-    doc.fontSize(7).fillColor('#111111').text('QR Code PIX', mainX + mainW - qrDrawWidth - 2, rowY + 318, {
+    doc.fontSize(7).fillColor('#111111').text('QR Code PIX', qrX, rowY + 310, {
       width: qrDrawWidth,
       align: 'center'
     });
   }
 
-  await drawBarcode(doc, boleto.codigoBarras, mainX + 10, rowY + 230, {
-    width: 650,
-    height: 66,
+  const barcodeX = mainX + 10;
+  const barcodeWidth = pixCode ? Math.min(620, qrX - barcodeX - 12) : 650;
+
+  await drawBarcode(doc, boleto.codigoBarras, barcodeX, rowY + 246, {
+    width: barcodeWidth,
+    height: 58,
     textFontSize: 10.5
   });
   doc
     .fontSize(8)
     .fillColor('#111111')
-    .text('Autenticacao Mecanica / FICHA DE COMPENSACAO', mainX + 10, bottomY - 18, {
-      width: 650,
+    .text('Autenticacao Mecanica / FICHA DE COMPENSACAO', barcodeX, bottomY - 36, {
+      width: barcodeWidth,
       align: 'right'
     });
 
