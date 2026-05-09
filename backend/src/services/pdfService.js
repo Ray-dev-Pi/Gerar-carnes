@@ -14,11 +14,11 @@ const storageDir = process.env.VERCEL
   : path.resolve(__dirname, '../../storage/carnes');
 const logoPath = path.resolve(__dirname, '../../assets/informatica.png');
 const carnePageSize = [980, 410];
-const boletosPerPage = 2;
-const a4PageSize = [841.89, 595.28];
+const boletosPerPage = 4;
+const a4PageSize = [595.28, 841.89];
 
 async function renderCarnePdf(doc, carne) {
-  const pageMargin = 12;
+  const pageMargin = 8;
   const slotHeight = (a4PageSize[1] - pageMargin * 2) / boletosPerPage;
   const scaleX = (a4PageSize[0] - pageMargin * 2) / carnePageSize[0];
   const scaleY = slotHeight / carnePageSize[1];
